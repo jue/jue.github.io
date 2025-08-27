@@ -1,0 +1,142 @@
+# .github/workflows/manual-sync.yml
+
+name: Manual Issues Sync
+
+# 手动触发工作流
+# Manual trigger workflow
+on:
+  workflow_dispatch:
+    inputs:
+      clear_docs:
+        description: 'Clear all existing docs before sync'
+        required: false
+        default: 'true'
+        type: boolean
+
+jobs:
+  sync-issues:
+    runs-on: ubuntu-latest
+
+    # 赋予脚本读写权限
+    # Grant read and write permissions to the script
+    permissions:
+      contents: write
+      issues: read
+
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+        with:
+          token: ${{ secrets.TOKEN }}
+
+      - name: Clear Existing Docs (Optional)
+        if: ${{ github.event.inputs.clear_docs == 'true' }}
+        run: |
+          if [ -d "docs" ]; then
+            rm -rf docs/*.md
+            echo "Cleared existing markdown files in docs directory"
+          fi
+
+      - name: Sync Open Issues to Docs
+        uses: actions/github-script@v7
+        with:
+          github-token: ${{ secrets.TOKEN }}
+          script: |
+            const fs = require('fs');
+            const path = require('path');
+            
+            // 加载共享工具函数
+            // Load shared utility functions
+            const utilsPath = path.join(process.cwd(), '.github/scripts/blog-utils.js');
+            const utilsCode = fs.readFileSync(utilsPath, 'utf8');
+            eval(utilsCode);
+
+            // 确保docs目录存在
+            if (!fs.existsSync('docs')) {
+              fs.mkdirSync('docs', { recursive: true });
+            }
+
+            // 获取仓库所有者
+            const owner = context.repo.owner;
+
+            // 获取所有open状态的issues
+            const issues = await github.rest.issues.listForRepo({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              state: 'open',
+              creator: owner,
+              per_page: 100
+            });
+
+            console.log(`Found $${issues.data.length} open issues`);
+
+            // 为每个issue创建markdown文件
+            for (const issue of issues.data) {
+              // 跳过pull requests
+              if (issue.pull_request) {
+                continue;
+              }
+              
+              // 使用共享工具函数生成博客文件内容
+              // Use shared utility function to generate blog file content
+              const blogFile = BlogUtils.createBlogFileContent(issue);
+              const filepath = path.join('docs', path.basename(blogFile.filePath));
+              const content = blogFile.content;
+              
+              // 写入文件
+              fs.writeFileSync(filepath, content, 'utf8');
+              console.log(`Created: ${path.basename(filepath)}`);
+            }
+
+      - name: Update README Issue List
+        uses: actions/github-script@v7
+        with:
+          github-token: ${{ secrets.TOKEN }}
+          script: |
+            const fs = require('fs');
+            const path = require('path');
+            
+            // 加载共享工具函数
+            // Load shared utility functions
+            const utilsPath = path.join(process.cwd(), '.github/scripts/blog-utils.js');
+            const utilsCode = fs.readFileSync(utilsPath, 'utf8');
+            eval(utilsCode);
+
+            // 获取仓库所有者
+            const owner = context.repo.owner;
+
+            // 获取所有open状态的issues
+            const issues = await github.rest.issues.listForRepo({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              state: 'open',
+              creator: owner,
+              per_page: 100
+            });
+
+            // 过滤掉pull requests
+            const actualIssues = issues.data.filter(issue => !issue.pull_request);
+            
+            // 按创建时间分组
+            const issuesByYearMonth = BlogUtils.groupIssuesByYearMonth(actualIssues);
+
+            // 生成README内容
+            // Generate README content
+            const readmeContent = BlogUtils.generateReadmeContent(issuesByYearMonth, actualIssues.length);
+
+            // 写入README文件
+            fs.writeFileSync('README.md', readmeContent, 'utf8');
+            console.log('README.md updated successfully');
+
+      - name: Commit and Push Changes
+        run: |
+          git config --local user.email "action@github.com"
+          git config --local user.name "GitHub Action"
+          git add .
+          if git diff --staged --quiet; then
+            echo "No changes to commit"
+          else
+            git commit -m "Manual sync: Update docs and README from open issues"
+            git push
+            echo "Changes committed and pushed"
+          fi

@@ -1,0 +1,313 @@
+# .github/workflows/blog-sync.yml
+
+name: Blog Sync with Issues
+
+# 触发条件：监听 issues 的六种状态
+# Trigger conditions: Listen for six states of issues
+on:
+  issues:
+    types: [opened, edited, closed, reopened, labeled, unlabeled]
+
+jobs:
+  sync-blog-post:
+    runs-on: ubuntu-latest
+
+    # 赋予脚本读写权限
+    # Grant read and write permissions to the script
+    permissions:
+      contents: write
+      issues: write
+
+    steps:
+      # 步骤一：检出仓库代码，以便后续操作
+      # Step 1: Check out the repository code for subsequent operations
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+
+      # 步骤二：处理 Issue 关闭事件（删除文章）
+      # Step 2: Handle Issue close event (delete article)
+      - name: Handle Closed Issue (Delete Post)
+        if: github.event.action == 'closed'
+        uses: actions/github-script@v7
+        with:
+          github-token: ${{ secrets.TOKEN }}
+          script: |
+            const fs = require('fs');
+            const path = require('path');
+            
+            // 加载共享工具函数
+            // Load shared utility functions
+            const utilsPath = path.join(process.cwd(), '.github/scripts/blog-utils.js');
+            const utilsCode = fs.readFileSync(utilsPath, 'utf8');
+            eval(utilsCode);
+            // --- 删除文章的脚本 ---
+            // --- Script to delete the article ---
+            const issue = context.payload.issue;
+            const issueNumber = issue.number;
+            const repoInfo = { owner: context.repo.owner, repo: context.repo.repo };
+
+            // 权限检查：只有仓库创建者可以删除博文
+            // Permission check: Only repository owner can delete blog posts
+            if (issue.user.login !== context.repo.owner) {
+              console.log(`Issue #${issueNumber} was created by ${issue.user.login}, not the repository owner. Skipping deletion.`);
+              return;
+            }
+
+            // 1. 直接通过issue标题计算文件路径
+            // 1. Calculate file path directly from issue title
+            const title = issue.title;
+            const sanitizedTitle = title.replace(/[<>:"/\\|?*]/g, '').replace(/\s+/g, ' ').trim();
+            const targetFilePath = `docs/${sanitizedTitle}.md`;
+
+            // 2. 尝试获取目标文件
+            // 2. Try to get the target file
+            try {
+              const { data: fileData } = await github.rest.repos.getContent({
+                ...repoInfo,
+                path: targetFilePath,
+              });
+
+              // 3. 验证文件确实对应当前issue（通过front matter中的issue_number）
+              // 3. Verify the file actually corresponds to the current issue
+              const fileContent = Buffer.from(fileData.content, 'base64').toString('utf8');
+              const match = fileContent.match(/issue_number:\s*(\d+)/);
+              
+              if (match && parseInt(match[1], 10) === issueNumber) {
+                // 4. 执行删除操作
+                // 4. Perform delete operation
+                await github.rest.repos.deleteFile({
+                  ...repoInfo,
+                  path: targetFilePath,
+                  message: `Delete blog: Closed issue #${issueNumber}`,
+                  sha: fileData.sha,
+                  committer: { name: 'GitHub Actions Bot', email: 'actions@github.com' }
+                });
+                console.log(`Successfully deleted ${targetFilePath}`);
+                
+                // 5. (可选) 添加评论告知已删除
+                // 5. (Optional) Add a comment to notify of deletion
+                await github.rest.issues.createComment({
+                  ...repoInfo,
+                  issue_number: issueNumber,
+                  body: `🗑️ 博客文章已根据 Issue 关闭状态自动删除。`
+                });
+              } else {
+                console.log(`File ${targetFilePath} exists but doesn't match issue #${issueNumber}.`);
+              }
+            } catch (error) {
+              if (error.status === 404) {
+                console.log(`No blog file found for issue #${issueNumber} at ${targetFilePath}.`);
+              } else {
+                console.error(`Error accessing file ${targetFilePath}:`, error.message);
+              }
+            }
+
+      # 步骤三：处理 Issue 打开、编辑、重开、标签事件（创建或更新文章）
+      # Step 3: Handle Issue open, edit, reopen, label events (create or update article)
+      - name: Handle Other Events (Create/Update Post)
+        if: github.event.action != 'closed'
+        uses: actions/github-script@v7
+        with:
+          github-token: ${{ secrets.TOKEN }}
+          script: |
+            const fs = require('fs');
+            const path = require('path');
+            
+            // 加载共享工具函数
+            // Load shared utility functions
+            const utilsPath = path.join(process.cwd(), '.github/scripts/blog-utils.js');
+            const utilsCode = fs.readFileSync(utilsPath, 'utf8');
+            eval(utilsCode);
+            
+            // --- 创建或更新文章的脚本 ---
+            // --- Script to create or update the article ---
+            const issue = context.payload.issue;
+            const issueNumber = issue.number;
+            const repoInfo = { owner: context.repo.owner, repo: context.repo.repo };
+
+            // 权限检查：只有仓库创建者可以创建/更新博文
+            // Permission check: Only repository owner can create/update blog posts
+            if (issue.user.login !== context.repo.owner) {
+              console.log(`Issue #${issueNumber} was created by ${issue.user.login}, not the repository owner. Skipping blog post creation/update.`);
+              
+              // 为非创建者的issue添加说明评论
+              // Add explanatory comment for non-owner issues
+              if (context.payload.action === 'opened') {
+                await github.rest.issues.createComment({
+                  ...repoInfo,
+                  issue_number: issueNumber,
+                  body: `📝 感谢您的Issue！但为了维护博客内容质量，只有仓库创建者发布的Issue才会自动转换为博客文章。您的Issue仍然有效，我们会及时处理。`
+                });
+              }
+              return;
+            }
+
+            // --- 智能查找旧文件的逻辑 ---
+            // --- Smart logic to find the old file ---
+            let oldFilePath = null;
+            let oldFileSha = null;
+
+            // 首先尝试通过当前标题查找文件
+            // First try to find file by current title
+            const currentTitle = issue.title;
+            const currentSanitizedTitle = currentTitle.replace(/[<>:"/\\|?*]/g, '').replace(/\s+/g, ' ').trim();
+            const currentFilePath = `docs/${currentSanitizedTitle}.md`;
+
+            try {
+              const { data: fileData } = await github.rest.repos.getContent({
+                ...repoInfo,
+                path: currentFilePath,
+              });
+              
+              // 验证文件确实对应当前issue
+              // Verify the file actually corresponds to the current issue
+              const fileContent = Buffer.from(fileData.content, 'base64').toString('utf8');
+              const match = fileContent.match(/issue_number:\s*(\d+)/);
+              if (match && parseInt(match[1], 10) === issueNumber) {
+                oldFilePath = currentFilePath;
+                oldFileSha = fileData.sha;
+                console.log(`Found existing file by current title: ${currentFilePath}`);
+              }
+            } catch (error) {
+              if (error.status === 404) {
+                // 如果通过当前标题找不到文件，说明可能是标题被修改了
+                // 这时需要遍历查找（但这种情况应该很少发生）
+                // If file not found by current title, title might have been changed
+                // Need to search through files (but this should be rare)
+                console.log(`File not found by current title ${currentFilePath}, searching for existing file...`);
+                try {
+                  const { data: files } = await github.rest.repos.getContent({ ...repoInfo, path: 'docs' });
+                  for (const file of files) {
+                    if (!file.name.endsWith('.md')) continue;
+                    const { data: content } = await github.rest.repos.getContent({ ...repoInfo, path: file.path });
+                    const fileContent = Buffer.from(content.content, 'base64').toString('utf8');
+                    const match = fileContent.match(/issue_number:\s*(\d+)/);
+                    if (match && parseInt(match[1], 10) === issueNumber) {
+                      oldFilePath = file.path;
+                      oldFileSha = file.sha;
+                      console.log(`Found existing file by issue number: ${file.path}`);
+                      break;
+                    }
+                  }
+                } catch (e) {
+                  if (e.status !== 404) {
+                    console.error("Error searching for existing files: " + e.message);
+                  } else {
+                    console.log("The /docs directory does not exist yet. A new one will be created.");
+                  }
+                }
+              } else {
+                console.error(`Error accessing file ${currentFilePath}:`, error.message);
+              }
+            }
+
+            // 1. 使用共享工具函数生成博客文件内容
+            // 1. Use shared utility functions to generate blog file content
+            const blogFile = BlogUtils.createBlogFileContent(issue);
+            const newFilePath = blogFile.filePath;
+            const fileContent = blogFile.content;
+
+            // 3. 如果标题被修改，导致文件路径变化，则先删除旧文件
+            // 3. If the title is modified, causing the file path to change, delete the old file first
+            if (oldFilePath && oldFilePath !== newFilePath) {
+              console.log(`Title changed. Deleting old file: ${oldFilePath}`);
+              await github.rest.repos.deleteFile({
+                ...repoInfo,
+                path: oldFilePath,
+                message: `Rename blog: Delete old file for #${issueNumber}`,
+                sha: oldFileSha
+              });
+              oldFileSha = undefined; // 清除 sha，因为我们要创建新文件
+            }
+
+            // 4. 创建或更新文件
+            // 4. Create or update the file
+            const message = oldFilePath ? `Update blog: ${issue.title}` : `Create blog: ${issue.title}`;
+            await github.rest.repos.createOrUpdateFileContents({
+              ...repoInfo,
+              path: newFilePath,
+              message: message,
+              content: Buffer.from(fileContent).toString('base64'),
+              sha: (oldFilePath === newFilePath) ? oldFileSha : undefined,
+              committer: { name: 'GitHub Actions Bot', email: 'actions@github.com' },
+              author: { name: issue.user.login, email: `${issue.user.login}@users.noreply.github.com` }
+            });
+
+            console.log(`Successfully processed ${newFilePath}`);
+
+      # 步骤四：更新 README.md 中的 Issue 列表（独立步骤，适用于所有事件）
+      # Step 4: Update Issue list in README.md (independent step for all events)
+      - name: Update README Issue List
+        uses: actions/github-script@v7
+        with:
+          github-token: ${{ secrets.TOKEN }}
+          script: |
+            const fs = require('fs');
+            const path = require('path');
+            
+            // 加载共享工具函数
+            // Load shared utility functions
+            const utilsPath = path.join(process.cwd(), '.github/scripts/blog-utils.js');
+            const utilsCode = fs.readFileSync(utilsPath, 'utf8');
+            eval(utilsCode);
+            
+            // --- 更新 README.md 中的 Issue 列表 ---
+            // --- Update Issue list in README.md ---
+            const repoInfo = { owner: context.repo.owner, repo: context.repo.repo };
+
+            try {
+              // 1. 获取所有 issues（只获取仓库创建者创建的）
+              // 1. Get all issues (only those created by repository owner)
+              const { data: issues } = await github.rest.issues.listForRepo({
+                ...repoInfo,
+                state: 'all',
+                creator: context.repo.owner,
+                per_page: 100,
+                sort: 'created',
+                direction: 'desc'
+              });
+
+              // 2. 过滤并分组 issues
+              // 2. Filter and group issues
+              const openIssues = issues.filter(issue => !issue.pull_request && issue.state === 'open');
+              const issuesByYearMonth = BlogUtils.groupIssuesByYearMonth(openIssues);
+
+              // 3. 生成 README 内容
+              // 3. Generate README content
+              const readmeContent = BlogUtils.generateReadmeContent(issuesByYearMonth, openIssues.length);
+
+              // 4. 获取当前 README.md 文件（如果存在）
+              // 4. Get current README.md file (if exists)
+              let currentReadmeSha = null;
+              try {
+                const { data: readmeData } = await github.rest.repos.getContent({
+                  ...repoInfo,
+                  path: 'README.md'
+                });
+                currentReadmeSha = readmeData.sha;
+              } catch (error) {
+                if (error.status !== 404) {
+                  console.error('Error getting README.md:', error.message);
+                }
+                // 文件不存在，将创建新文件
+                // File doesn't exist, will create new file
+              }
+
+              // 5. 创建或更新 README.md
+              // 5. Create or update README.md
+              await github.rest.repos.createOrUpdateFileContents({
+                ...repoInfo,
+                path: 'README.md',
+                message: 'Update README.md with latest issue list',
+                content: Buffer.from(readmeContent).toString('base64'),
+                sha: currentReadmeSha,
+                committer: { name: 'GitHub Actions Bot', email: 'actions@github.com' }
+              });
+
+              console.log('Successfully updated README.md with issue list');
+              
+            } catch (error) {
+              console.error('Error updating README.md:', error.message);
+              // 不要让这个错误阻止整个工作流
+              // Don't let this error block the entire workflow
+            }
