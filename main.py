@@ -250,9 +250,13 @@ def add_md_label(repo, md, me):
 
 def get_to_generate_issues(repo, dir_name, issue_number=None):
     md_files = os.listdir(dir_name)
-    generated_issues_numbers = [
-        int(i.split("_")[0]) for i in md_files if i.split("_")[0].isdigit()
-    ]
+    generated_issues_numbers = []
+    for i in md_files:
+        try:
+            issue_number = int(i.split("_")[0])
+            generated_issues_numbers.append(issue_number)
+        except ValueError:
+            pass
     to_generate_issues = [
         i
         for i in list(repo.get_issues())
