@@ -6,8 +6,8 @@
 const BLOG_DIR = 'docs/posts'
 
 /**
- * 生成 Front Matter
- * Generate Front Matter
+ * 生成 Front Matter (适配VitePress + createContentLoader)
+ * Generate Front Matter (adapted for VitePress + createContentLoader)
  * @param {Object} issue - GitHub issue 对象
  * @returns {string} - Front Matter 字符串
  */
@@ -20,7 +20,7 @@ function generateFrontMatter(issue) {
 
   // 分离分类和标签
   // Separate categories and tags
-  const categories = []
+  let category = '其他' // 默认分类
   const tags = []
 
   issue.labels.forEach((label) => {
@@ -29,7 +29,7 @@ function generateFrontMatter(issue) {
       // Remove 'Category:' prefix for categories
       const categoryName = label.name.replace(/^Category:\s*/, '').trim()
       if (categoryName) {
-        categories.push(categoryName)
+        category = categoryName
       }
     } else {
       // 其他标签作为 tags
@@ -38,34 +38,57 @@ function generateFrontMatter(issue) {
     }
   })
 
+  // 生成文章描述（取issue body的前150个字符）
+  // Generate description (first 150 characters of issue body)
+  let description = ''
+  if (issue.body) {
+    description = issue.body
+      .replace(/[#*`\[\]]/g, '') // 移除markdown标记
+      .replace(/\n+/g, ' ') // 换行转空格
+      .trim()
+      .substring(0, 150)
+    if (issue.body.length > 150) {
+      description += '...'
+    }
+  }
+
+  // 估算字数（中文按字符计算，英文按单词计算）
+  // Estimate word count
+  let wordCount = 0
+  if (issue.body) {
+    const chineseChars = (issue.body.match(/[\u4e00-\u9fff]/g) || []).length
+    const englishWords =
+      issue.body.replace(/[\u4e00-\u9fff]/g, '').match(/\b\w+\b/g) || []
+    wordCount = chineseChars + englishWords.length
+  }
+
   const frontMatterLines = [
     '---',
-    `layout: post`,
-    `title: "${title.replace(/"/g, '\\"')}"`,
-    `author: "${author}"`,
+    `title: '${title.replace(/'/g, "\\'")}'`,
+    `description: '${description.replace(/'/g, "\\'")}'`,
+    `author: '${author}'`,
     `date: ${createdAt}`,
-    `last_modified_at: ${updatedAt}`
+    `lastUpdated: ${updatedAt}`,
+    `category: '${category.replace(/'/g, "\\'")}'`
   ]
-
-  // 添加分类（如果有）
-  // Add categories (if any)
-  if (categories.length > 0) {
-    frontMatterLines.push(
-      `categories: [${categories
-        .map((cat) => `"${cat.replace(/"/g, '\\"')}"`)
-        .join(', ')}]`
-    )
-  }
 
   // 添加标签（如果有）
   // Add tags (if any)
   if (tags.length > 0) {
-    frontMatterLines.push(
-      `tags: [${tags.map((tag) => `"${tag.replace(/"/g, '\\"')}"`).join(', ')}]`
-    )
+    frontMatterLines.push('tags:')
+    tags.forEach((tag) => {
+      frontMatterLines.push(`  - '${tag.replace(/'/g, "\\'")}'`)
+    })
   }
 
-  frontMatterLines.push(`issue_number: ${issueNumber}`, '---', '')
+  // 添加字数和issue编号
+  // Add word count and issue number
+  frontMatterLines.push(
+    `wordCount: ${wordCount}`,
+    `issue_number: ${issueNumber}`,
+    '---',
+    ''
+  )
 
   return frontMatterLines.join('\n')
 }

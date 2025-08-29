@@ -10,7 +10,7 @@ on:
       clear_docs:
         description: 'Clear all existing docs before sync'
         required: false
-        default: 'true'
+        default: true
         type: boolean
 
 jobs:
@@ -32,9 +32,10 @@ jobs:
       - name: Clear Existing Docs (Optional)
         if: ${{ github.event.inputs.clear_docs == 'true' }}
         run: |
-          if [ -d "docs/post" ]; then
-            rm -rf docs/post/*.md
-            echo "Cleared existing markdown files in docs/post directory"
+          if [ -d "docs/posts" ]; then
+            # 保留 index.md，只删除文章文件
+            find docs/posts -name "*.md" -not -name "index.md" -delete
+            echo "Cleared existing article files in docs/posts directory (keeping index.md)"
           fi
 
       - name: Sync Open Issues to Docs
@@ -44,7 +45,7 @@ jobs:
           script: |
             const fs = require('fs');
             const path = require('path');
-            
+
             // 加载共享工具函数
             // Load shared utility functions
             const utilsPath = path.join(process.cwd(), '.github/scripts/blog-utils.js');
@@ -95,7 +96,7 @@ jobs:
           script: |
             const fs = require('fs');
             const path = require('path');
-            
+
             // 加载共享工具函数
             // Load shared utility functions
             const utilsPath = path.join(process.cwd(), '.github/scripts/blog-utils.js');
@@ -116,7 +117,7 @@ jobs:
 
             // 过滤掉pull requests
             const actualIssues = issues.data.filter(issue => !issue.pull_request);
-            
+
             // 按创建时间分组
             const issuesByYearMonth = BlogUtils.groupIssuesByYearMonth(actualIssues);
 
