@@ -2,8 +2,18 @@ import { defineConfig } from 'vitepress'
 
 // https://vitepress.dev/reference/site-config
 export default defineConfig({
+  vite: {
+    server: {
+      port: 3000,
+      host: '0.0.0.0',
+      open: true,
+      allowedHosts: ['dev.jue.sh']
+    }
+  },
+  lang: 'zh-CN',
   title: 'NIPAO',
   description: 'NIPAO分享',
+  head: [['link', { rel: 'icon', href: '/favicon.ico' }]],
   themeConfig: {
     // https://vitepress.dev/reference/default-theme-config
     nav: [
