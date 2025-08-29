@@ -85,9 +85,9 @@ ehthumbs.db
 Thumbs.db
 
 # VitePress specific
-.vitepress/
-!.vitepress/config.*
-!.vitepress/theme/
+#.vitepress/
+#!.vitepress/config.*
+#!.vitepress/theme/
 
 # Build tools
 .cache/
