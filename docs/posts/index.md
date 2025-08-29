@@ -5,118 +5,57 @@ description: 技术分享与开发经验
 ---
 
 <script setup>
-import { ref, onMounted } from 'vue'
+import { ref, onMounted, computed } from 'vue'
+import { data as postsData } from '../.vitepress/theme/posts.data.js'
 
 // 博客数据状态
 const posts = ref([])
 const loading = ref(true)
-const error = ref(null)
 const currentPage = ref(1)
 const pageSize = ref(10)
-const totalPosts = ref(0)
-const totalPages = ref(0)
-const categorizedPosts = ref({
-  '技术教程': [],
-  '开发相关': [],
-  '其他': []
+
+// 获取分类统计
+const categorizedPosts = computed(() => {
+  const categories = {
+    '技术教程': [],
+    '开发相关': [],
+    '其他': []
+  }
+  
+  posts.value.forEach(post => {
+    const category = post.category || '其他'
+    if (categories[category]) {
+      categories[category].push(post)
+    } else {
+      categories['其他'].push(post)
+    }
+  })
+  
+  return categories
 })
 
-// 模拟从GitHub API获取数据
-// 在实际部署中，这些数据将由GitHub Actions自动生成
-const mockPosts = [
-  {
-    number: 1,
-    title: '【Proxmox VE 终极教程】如何实现虚拟机（Guest OS）宕机后自动重启？',
-    created_at: '2024-01-15T10:00:00Z',
-    updated_at: '2024-01-15T10:00:00Z',
-    body: '这是一篇关于Proxmox VE虚拟机自动重启的详细教程。在这篇文章中，我们将学习如何配置虚拟机在宕机后自动重启，确保服务的高可用性。本教程涵盖了从基础配置到高级优化的完整流程，适合系统管理员和运维工程师参考。',
-    labels: [{ name: '技术教程' }, { name: 'Proxmox' }],
-    state: 'open',
-    author: { login: 'jue' }
-  },
-  {
-    number: 2,
-    title: '【实战教程】突破端口封锁：如何使用1Panel在家庭网络中发布多个HTTPS服务',
-    created_at: '2024-01-14T09:00:00Z',
-    updated_at: '2024-01-14T09:00:00Z',
-    body: '本教程将详细介绍如何使用1Panel在家庭网络环境中发布多个HTTPS服务，突破运营商的端口封锁限制。我们将学习反向代理配置、SSL证书管理、域名解析等关键技术。',
-    labels: [{ name: '技术教程' }, { name: '网络' }],
-    state: 'open',
-    author: { login: 'jue' }
-  },
-  {
-    number: 3,
-    title: '如何重置supabase里所有表、函数和触发器',
-    created_at: '2024-01-13T08:00:00Z',
-    updated_at: '2024-01-13T08:00:00Z',
-    body: '在开发过程中，有时需要完全重置Supabase数据库。本文将介绍如何安全地重置所有表、函数和触发器，包括数据备份、权限管理等重要注意事项。',
-    labels: [{ name: '开发相关' }, { name: 'Supabase' }],
-    state: 'open',
-    author: { login: 'jue' }
-  },
-  {
-    number: 4,
-    title: '理解Autodesk Viewer3D文档的使用方法',
-    created_at: '2024-01-12T07:00:00Z',
-    updated_at: '2024-01-12T07:00:00Z',
-    body: 'Autodesk Viewer3D是一个强大的3D模型查看器。本文将详细介绍其API文档的使用方法和最佳实践，帮助开发者快速集成3D查看功能。',
-    labels: [{ name: '开发相关' }, { name: 'JavaScript' }],
-    state: 'open',
-    author: { login: 'jue' }
-  },
-  {
-    number: 5,
-    title: 'Vue 3 Composition API 最佳实践',
-    created_at: '2024-01-11T06:00:00Z',
-    updated_at: '2024-01-11T06:00:00Z',
-    body: '深入探讨Vue 3 Composition API的使用技巧和最佳实践，帮助开发者更好地组织和管理代码。包括响应式数据、生命周期钩子、组合式函数等核心概念。',
-    labels: [{ name: '技术教程' }, { name: 'Vue' }],
-    state: 'open',
-    author: { login: 'jue' }
-  }
-]
-
-// 加载博客数据
-const loadPosts = async () => {
-  try {
-    loading.value = true
-    // 模拟API调用延迟
-    await new Promise(resolve => setTimeout(resolve, 500))
-    
-    posts.value = mockPosts
-    totalPosts.value = mockPosts.length
-    totalPages.value = Math.ceil(totalPosts.value / pageSize.value)
-    
-    // 按分类分组
-    categorizedPosts.value = {
-      '技术教程': mockPosts.filter(post => post.labels.some(label => label.name === '技术教程')),
-      '开发相关': mockPosts.filter(post => post.labels.some(label => label.name === '开发相关')),
-      '其他': mockPosts.filter(post => !post.labels.some(label => ['技术教程', '开发相关'].includes(label.name)))
-    }
-  } catch (err) {
-    error.value = err.message
-  } finally {
-    loading.value = false
-  }
-}
+const totalPosts = computed(() => posts.value.length)
+const totalPages = computed(() => Math.ceil(totalPosts.value / pageSize.value))
 
 // 获取当前页的文章
-const getCurrentPagePosts = () => {
+const getCurrentPagePosts = computed(() => {
   const startIndex = (currentPage.value - 1) * pageSize.value
   const endIndex = startIndex + pageSize.value
   return posts.value.slice(startIndex, endIndex)
-}
+})
 
 // 处理分页变化
 const handlePageChange = (page) => {
   currentPage.value = page
-  // 滚动到顶部
   window.scrollTo({ top: 0, behavior: 'smooth' })
 }
 
 // 组件挂载时加载数据
-onMounted(() => {
-  loadPosts()
+onMounted(async () => {
+  loading.value = true
+  await new Promise(resolve => setTimeout(resolve, 300)) // 简短加载动画
+  posts.value = postsData || []
+  loading.value = false
 })
 </script>
 
@@ -166,8 +105,8 @@ v-if="totalPages > 1"
   <!-- 文章列表 -->
   <div class="blog-posts-container">
     <BlogPostCard 
-      v-for="post in getCurrentPagePosts()"
-      :key="post.number"
+      v-for="post in getCurrentPagePosts"
+      :key="post.url"
       :post="post"
       :show-excerpt="true"
       :excerpt-length="150"
