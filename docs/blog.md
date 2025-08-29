@@ -6,9 +6,7 @@ description: 技术分享与开发经验
 
 <script setup>
 import { ref, onMounted, computed } from 'vue'
-import { useData } from 'vitepress'
-
-const { page } = useData()
+import { data as postsData } from './.vitepress/theme/posts.data.js'
 
 // 博客数据状态
 const posts = ref([])
@@ -19,69 +17,14 @@ const pageSize = ref(6)
 const selectedCategory = ref('全部')
 const searchQuery = ref('')
 
-// 从URL参数获取分类和搜索（简化版本，VitePress中处理查询参数较复杂）
-const urlCategory = ref('全部')
-const urlSearch = ref('')
-
-// 模拟博客数据
-const mockPosts = [
-  {
-    number: 1,
-    title: '【Proxmox VE 终极教程】如何实现虚拟机（Guest OS）宕机后自动重启？',
-    created_at: '2024-01-15T10:00:00Z',
-    updated_at: '2024-01-15T10:00:00Z',
-    body: '这是一篇关于Proxmox VE虚拟机自动重启的详细教程。在这篇文章中，我们将学习如何配置虚拟机在宕机后自动重启，确保服务的高可用性。本教程涵盖了从基础配置到高级优化的完整流程，适合系统管理员和运维工程师参考。包括HA集群配置、资源管理、故障转移等关键技术点。',
-    labels: [{ name: '技术教程' }, { name: 'Proxmox' }, { name: '虚拟化' }],
-    state: 'open',
-    author: { login: 'jue' }
-  },
-  {
-    number: 2,
-    title: '【实战教程】突破端口封锁：如何使用1Panel在家庭网络中发布多个HTTPS服务',
-    created_at: '2024-01-14T09:00:00Z',
-    updated_at: '2024-01-14T09:00:00Z',
-    body: '本教程将详细介绍如何使用1Panel在家庭网络环境中发布多个HTTPS服务，突破运营商的端口封锁限制。我们将学习反向代理配置、SSL证书管理、域名解析等关键技术。内容包括Docker容器化部署、Nginx配置优化、Let\'s Encrypt自动续期、防火墙设置等实用技巧。',
-    labels: [{ name: '技术教程' }, { name: '网络' }, { name: '1Panel' }],
-    state: 'open',
-    author: { login: 'jue' }
-  },
-  {
-    number: 3,
-    title: '【进阶篇】巧用CDN：为家庭服务套上"马甲"，实现完美HTTPS访问',
-    created_at: '2024-01-13T08:00:00Z',
-    updated_at: '2024-01-13T08:00:00Z',
-    body: '深入探讨如何利用CDN服务为家庭自建服务提供完美的HTTPS访问体验。本文将介绍多种CDN方案的选择与配置，包括Cloudflare、阿里云CDN等服务的使用技巧。涵盖域名配置、SSL证书管理、缓存策略、安全防护等多个方面。',
-    labels: [{ name: '技术教程' }, { name: '网络' }, { name: 'CDN' }],
-    state: 'open',
-    author: { login: 'jue' }
-  },
-  {
-    number: 4,
-    title: '如何重置supabase里所有表、函数和触发器',
-    created_at: '2024-01-12T07:00:00Z',
-    updated_at: '2024-01-12T07:00:00Z',
-    body: '在开发过程中，有时需要完全重置Supabase数据库。本文将介绍如何安全地重置所有表、函数和触发器，包括数据备份、权限管理等重要注意事项。详细说明SQL脚本编写、数据迁移策略、环境隔离等最佳实践。适合使用Supabase进行开发的技术人员参考。',
-    labels: [{ name: '开发相关' }, { name: 'Supabase' }, { name: '数据库' }],
-    state: 'open',
-    author: { login: 'jue' }
-  },
-  {
-    number: 5,
-    title: '理解Autodesk Viewer3D文档的使用方法',
-    created_at: '2024-01-11T06:00:00Z',
-    updated_at: '2024-01-11T06:00:00Z',
-    body: 'Autodesk Viewer3D是一个强大的3D模型查看器。本文将详细介绍其API文档的使用方法和最佳实践，帮助开发者快速集成3D查看功能。包括模型加载、视图控制、材质渲染、交互事件等核心功能的实现。提供完整的代码示例和常见问题解决方案。',
-    labels: [{ name: '开发相关' }, { name: 'JavaScript' }, { name: '3D' }],
-    state: 'open',
-    author: { login: 'jue' }
-  }
-]
-
 // 获取所有分类
 const categories = computed(() => {
   const cats = new Set(['全部'])
   posts.value.forEach(post => {
-    post.labels?.forEach(label => cats.add(label.name))
+    if (post.category) {
+      cats.add(post.category)
+    }
+    post.tags?.forEach(tag => cats.add(tag))
   })
   return Array.from(cats)
 })
@@ -93,7 +36,8 @@ const filteredPosts = computed(() => {
   // 按分类过滤
   if (selectedCategory.value !== '全部') {
     filtered = filtered.filter(post => 
-      post.labels?.some(label => label.name === selectedCategory.value)
+      post.category === selectedCategory.value ||
+      post.tags?.includes(selectedCategory.value)
     )
   }
 
@@ -102,7 +46,7 @@ const filteredPosts = computed(() => {
     const query = searchQuery.value.toLowerCase()
     filtered = filtered.filter(post => 
       post.title.toLowerCase().includes(query) ||
-      post.body.toLowerCase().includes(query)
+      (post.excerpt && post.excerpt.toLowerCase().includes(query))
     )
   }
 
@@ -122,8 +66,11 @@ const currentPagePosts = computed(() => {
 const categoryStats = computed(() => {
   const stats = {}
   posts.value.forEach(post => {
-    post.labels?.forEach(label => {
-      stats[label.name] = (stats[label.name] || 0) + 1
+    if (post.category) {
+      stats[post.category] = (stats[post.category] || 0) + 1
+    }
+    post.tags?.forEach(tag => {
+      stats[tag] = (stats[tag] || 0) + 1
     })
   })
   return stats
@@ -133,8 +80,8 @@ const categoryStats = computed(() => {
 const loadPosts = async () => {
   try {
     loading.value = true
-    await new Promise(resolve => setTimeout(resolve, 800))
-    posts.value = mockPosts
+    await new Promise(resolve => setTimeout(resolve, 500))
+    posts.value = postsData || []
   } catch (err) {
     error.value = err.message
   } finally {

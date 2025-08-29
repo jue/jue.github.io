@@ -6,12 +6,12 @@
       </h3>
 
       <div class="post-meta">
-        <time class="post-date" :datetime="post.created_at">
-          {{ formatDate(post.created_at) }}
+        <time class="post-date" :datetime="post.date">
+          {{ formatDate(post.date) }}
         </time>
         <span class="post-author" v-if="post.author">
           <span class="author-icon">👤</span>
-          {{ post.author.login }}
+          {{ post.author }}
         </span>
         <span class="reading-time" v-if="readingTime">
           <span class="time-icon">⏱️</span>
@@ -25,14 +25,14 @@
         {{ excerpt }}
       </p>
 
-      <div class="post-tags" v-if="post.labels && post.labels.length > 0">
+      <div class="post-tags" v-if="post.tags && post.tags.length > 0">
         <span
-          v-for="label in post.labels"
-          :key="label.name"
+          v-for="tag in post.tags"
+          :key="tag"
           class="tag"
-          :class="getTagClass(label.name)"
+          :class="getTagClass(tag)"
         >
-          {{ getTagIcon(label.name) }} {{ label.name }}
+          {{ getTagIcon(tag) }} {{ tag }}
         </span>
       </div>
     </div>
@@ -44,8 +44,11 @@
 
       <div class="post-stats">
         <span class="word-count" v-if="wordCount"> {{ wordCount }}字 </span>
-        <span class="update-time" v-if="post.updated_at !== post.created_at">
-          更新于 {{ formatDate(post.updated_at) }}
+        <span
+          class="update-time"
+          v-if="post.lastUpdated && post.lastUpdated !== post.date"
+        >
+          更新于 {{ formatDate(post.lastUpdated) }}
         </span>
       </div>
     </div>
@@ -72,28 +75,25 @@ const props = defineProps({
 
 // 计算文章URL
 const postUrl = computed(() => {
-  return `/posts/${encodeURIComponent(props.post.title)}`
+  return props.post.url || `/posts/${encodeURIComponent(props.post.title)}`
 })
 
 // 计算摘要
 const excerpt = computed(() => {
-  if (!props.post.body) return ''
-  const text = props.post.body.replace(/[#*`\[\]]/g, '').trim()
-  return text.length > props.excerptLength
-    ? text.substring(0, props.excerptLength) + '...'
-    : text
+  if (props.post.excerpt) return props.post.excerpt
+  return ''
 })
 
 // 计算字数
 const wordCount = computed(() => {
-  if (!props.post.body) return 0
-  return props.post.body.replace(/\s/g, '').length
+  return props.post.wordCount || 0
 })
 
-// 计算阅读时间（按每分钟200字计算）
+// 计算阅读时间
 const readingTime = computed(() => {
-  const words = wordCount.value
-  return Math.ceil(words / 200)
+  return (
+    props.post.readingTime || Math.ceil((props.post.wordCount || 1000) / 200)
+  )
 })
 
 // 格式化日期

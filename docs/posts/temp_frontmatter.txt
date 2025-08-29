@@ -1,0 +1,16 @@
+---
+title: "【进阶篇】巧用CDN：为家庭服务套上"马甲"，实现完美HTTPS访问"
+description: "深入探讨如何利用CDN服务为家庭自建服务提供完美的HTTPS访问体验。介绍多种CDN方案的选择与配置，包括Cloudflare等服务的使用技巧。"
+author: "jue"
+date: 2024-01-13
+lastUpdated: 2024-01-13
+category: "技术教程"
+tags:
+  - "CDN"
+  - "网络"
+  - "HTTPS"
+  - "Cloudflare"
+  - "家庭网络"
+wordCount: 2100
+issue_number: 5
+---
