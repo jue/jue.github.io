@@ -2,7 +2,8 @@
 title: "【实战教程】突破端口封锁：如何使用1Panel在家庭网络中发布多个HTTPS服务"
 author: "jue"
 date: 2025-08-25
-last_modified_at: 2025-08-25
+last_modified_at: 2025-08-29
+categories: ["技术教程"]
 issue_number: 4
 ---
 ### 前言：家庭开发者的“甜蜜烦恼”
