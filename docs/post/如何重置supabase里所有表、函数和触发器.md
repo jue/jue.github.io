@@ -1,10 +1,8 @@
 ---
-layout: default
 title: "如何重置supabase里所有表、函数和触发器"
 author: "jue"
 date: 2025-05-05
 last_modified_at: 2025-05-08
-tags: []
 issue_number: 1
 ---
 最近在开发过程中，经常会遇到需要重置Supabase数据库的情况。这些情况包括：

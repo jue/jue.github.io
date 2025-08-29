@@ -1,10 +1,8 @@
 ---
-layout: default
 title: "【进阶篇】巧用CDN：为家庭服务套上“马甲”，实现完美HTTPS访问"
 author: "jue"
 date: 2025-08-25
 last_modified_at: 2025-08-25
-tags: []
 issue_number: 5
 ---
 ### 【进阶篇】巧用CDN：为家庭服务套上“马甲”，实现完美HTTPS访问

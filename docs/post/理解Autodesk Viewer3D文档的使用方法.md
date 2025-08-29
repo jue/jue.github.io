@@ -1,10 +1,8 @@
 ---
-layout: default
 title: "理解Autodesk Viewer3D文档的使用方法"
 author: "jue"
 date: 2025-07-01
 last_modified_at: 2025-07-01
-tags: []
 issue_number: 2
 ---
 # 理解Autodesk Viewer3D文档的使用方法
