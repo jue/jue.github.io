@@ -1,15 +1,36 @@
 {
+  "name": "nipao-blog",
+  "version": "1.0.0",
+  "description": "NIPAO 技术博客 - 基于 VitePress 的现代化博客系统",
+  "type": "module",
   "scripts": {
+    "dev": "vitepress dev docs",
+    "build": "vitepress build docs",
+    "preview": "vitepress preview docs",
     "docs:dev": "vitepress dev docs",
     "docs:build": "vitepress build docs",
     "docs:preview": "vitepress preview docs"
   },
+  "keywords": [
+    "blog",
+    "vitepress",
+    "vue",
+    "技术博客",
+    "教程"
+  ],
+  "author": "NIPAO",
+  "license": "MIT",
   "devDependencies": {
-    "vitepress": "^1.6.4"
+    "vitepress": "^1.6.4",
+    "@types/node": "^20.10.0",
+    "typescript": "^5.3.0"
   },
   "dependencies": {
     "@tailwindcss/vite": "^4.1.12",
     "tailwindcss": "^4.1.12",
-    "vue-router": "^4.5.1"
+    "vue": "^3.4.0"
+  },
+  "engines": {
+    "node": ">=18.0.0"
   }
 }
