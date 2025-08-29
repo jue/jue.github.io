@@ -32,9 +32,9 @@ jobs:
       - name: Clear Existing Docs (Optional)
         if: ${{ github.event.inputs.clear_docs == 'true' }}
         run: |
-          if [ -d "docs" ]; then
-            rm -rf docs/*.md
-            echo "Cleared existing markdown files in docs directory"
+          if [ -d "docs/post" ]; then
+            rm -rf docs/post/*.md
+            echo "Cleared existing markdown files in docs/post directory"
           fi
 
       - name: Sync Open Issues to Docs
@@ -51,9 +51,9 @@ jobs:
             const utilsCode = fs.readFileSync(utilsPath, 'utf8');
             eval(utilsCode);
 
-            // 确保docs目录存在
-            if (!fs.existsSync('docs')) {
-              fs.mkdirSync('docs', { recursive: true });
+            // 确保博客目录存在
+            if (!fs.existsSync(BlogUtils.BLOG_DIR)) {
+              fs.mkdirSync(BlogUtils.BLOG_DIR, { recursive: true });
             }
 
             // 获取仓库所有者
@@ -80,7 +80,7 @@ jobs:
               // 使用共享工具函数生成博客文件内容
               // Use shared utility function to generate blog file content
               const blogFile = BlogUtils.createBlogFileContent(issue);
-              const filepath = path.join('docs', path.basename(blogFile.filePath));
+              const filepath = path.join(BlogUtils.BLOG_DIR, path.basename(blogFile.filePath));
               const content = blogFile.content;
               
               // 写入文件
@@ -136,7 +136,7 @@ jobs:
           if git diff --staged --quiet; then
             echo "No changes to commit"
           else
-            git commit -m "Manual sync: Update docs and README from open issues"
+            git commit -m "Manual sync: Update blog posts and README from open issues"
             git push
             echo "Changes committed and pushed"
           fi

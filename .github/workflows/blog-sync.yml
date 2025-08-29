@@ -57,7 +57,7 @@ jobs:
             // 1. Calculate file path directly from issue title
             const title = issue.title;
             const sanitizedTitle = title.replace(/[<>:"/\\|?*]/g, '').replace(/\s+/g, ' ').trim();
-            const targetFilePath = `docs/${sanitizedTitle}.md`;
+            const targetFilePath = `${BlogUtils.BLOG_DIR}/${sanitizedTitle}.md`;
 
             // 2. 尝试获取目标文件
             // 2. Try to get the target file
@@ -151,7 +151,7 @@ jobs:
             // First try to find file by current title
             const currentTitle = issue.title;
             const currentSanitizedTitle = currentTitle.replace(/[<>:"/\\|?*]/g, '').replace(/\s+/g, ' ').trim();
-            const currentFilePath = `docs/${currentSanitizedTitle}.md`;
+            const currentFilePath = `${BlogUtils.BLOG_DIR}/${currentSanitizedTitle}.md`;
 
             try {
               const { data: fileData } = await github.rest.repos.getContent({
@@ -176,7 +176,7 @@ jobs:
                 // Need to search through files (but this should be rare)
                 console.log(`File not found by current title ${currentFilePath}, searching for existing file...`);
                 try {
-                  const { data: files } = await github.rest.repos.getContent({ ...repoInfo, path: 'docs' });
+                  const { data: files } = await github.rest.repos.getContent({ ...repoInfo, path: BlogUtils.BLOG_DIR });
                   for (const file of files) {
                     if (!file.name.endsWith('.md')) continue;
                     const { data: content } = await github.rest.repos.getContent({ ...repoInfo, path: file.path });
@@ -193,7 +193,7 @@ jobs:
                   if (e.status !== 404) {
                     console.error("Error searching for existing files: " + e.message);
                   } else {
-                    console.log("The /docs directory does not exist yet. A new one will be created.");
+                    console.log(`The /${BlogUtils.BLOG_DIR} directory does not exist yet. A new one will be created.`);
                   }
                 }
               } else {

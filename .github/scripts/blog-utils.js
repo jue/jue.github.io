@@ -1,6 +1,10 @@
 // 博客工具函数库
 // Blog utility functions library
 
+// 博客目录路径常量
+// Blog directory path constant
+const BLOG_DIR = 'docs/post';
+
 /**
  * 生成 Front Matter
  * Generate Front Matter
@@ -12,21 +16,55 @@ function generateFrontMatter(issue) {
   const author = issue.user.login;
   const createdAt = issue.created_at.split('T')[0];
   const updatedAt = issue.updated_at.split('T')[0];
-  const tags = issue.labels.map(label => label.name);
   const issueNumber = issue.number;
+  
+  // 分离分类和标签
+  // Separate categories and tags
+  const categories = [];
+  const tags = [];
+  
+  issue.labels.forEach(label => {
+    if (label.name.startsWith('Category:')) {
+      // 移除 'Category:' 前缀作为分类
+      // Remove 'Category:' prefix for categories
+      const categoryName = label.name.replace(/^Category:\s*/, '').trim();
+      if (categoryName) {
+        categories.push(categoryName);
+      }
+    } else {
+      // 其他标签作为 tags
+      // Other labels as tags
+      tags.push(label.name);
+    }
+  });
 
-  return [
+  const frontMatterLines = [
     '---',
-    'layout: default',
     `title: "${title.replace(/"/g, '\\"')}"`,
     `author: "${author}"`,
     `date: ${createdAt}`,
-    `last_modified_at: ${updatedAt}`,
-    `tags: [${tags.join(', ')}]`,
+    `last_modified_at: ${updatedAt}`
+  ];
+  
+  // 添加分类（如果有）
+  // Add categories (if any)
+  if (categories.length > 0) {
+    frontMatterLines.push(`categories: [${categories.map(cat => `"${cat.replace(/"/g, '\\"')}"`).join(', ')}]`);
+  }
+  
+  // 添加标签（如果有）
+  // Add tags (if any)
+  if (tags.length > 0) {
+    frontMatterLines.push(`tags: [${tags.map(tag => `"${tag.replace(/"/g, '\\"')}"`).join(', ')}]`);
+  }
+  
+  frontMatterLines.push(
     `issue_number: ${issueNumber}`,
     '---',
     ''
-  ].join('\n');
+  );
+
+  return frontMatterLines.join('\n');
 }
 
 /**
@@ -124,7 +162,7 @@ function generateReadmeContent(issuesByYearMonth, totalCount) {
 function createBlogFileContent(issue) {
   const frontMatter = generateFrontMatter(issue);
   const sanitizedTitle = sanitizeFilename(issue.title);
-  const filePath = `docs/${sanitizedTitle}.md`;
+  const filePath = `${BLOG_DIR}/${sanitizedTitle}.md`;
   const content = frontMatter + (issue.body || '');
   
   return {
@@ -137,6 +175,7 @@ function createBlogFileContent(issue) {
 // 导出函数供 GitHub Actions 使用
 // Export functions for GitHub Actions
 const BlogUtils = {
+  BLOG_DIR,
   generateFrontMatter,
   sanitizeFilename,
   groupIssuesByYearMonth,
