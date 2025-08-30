@@ -5,7 +5,7 @@ import BlogPostCard from '../components/BlogPostCard.vue'
 import BlogPagination from '../components/BlogPagination.vue'
 
 // 导入自定义样式
-import './custom.css'
+import './app.css'
 
 export default {
   extends: DefaultTheme,

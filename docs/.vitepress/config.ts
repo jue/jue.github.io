@@ -1,3 +1,4 @@
+import Tailwind from '@tailwindcss/vite'
 import { defineConfig } from 'vitepress'
 import { generateSitemap } from './utils/sitemap'
 
@@ -147,7 +148,7 @@ export default defineConfig({
     },
 
     // 社交链接
-    socialLinks: [{ icon: 'github', link: 'https://github.com/yourusername' }],
+    socialLinks: [{ icon: 'github', link: 'https://github.com/jue' }],
 
     // 返回顶部
     returnToTopLabel: '返回顶部',
@@ -186,6 +187,7 @@ export default defineConfig({
       port: 3000,
       host: true,
       allowedHosts: ['dev.jue.sh']
-    }
+    },
+    plugins: [Tailwind()]
   }
 })

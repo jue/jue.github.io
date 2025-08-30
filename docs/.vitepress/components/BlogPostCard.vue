@@ -1,6 +1,8 @@
 <template>
   <article class="blog-post-card">
     <div class="post-header">
+      <div class="text-red-500 p-10">测试tailwind</div>
+
       <h3 class="post-title">
         <a :href="postUrl" class="title-link">{{ post.title }}</a>
       </h3>
