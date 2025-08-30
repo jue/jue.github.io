@@ -118,14 +118,7 @@ onMounted(() => {
 })
 </script>
 
-# 📚 技术博客
-
-<div class="blog-header">
-  <div class="blog-intro">
-    <p>欢迎来到我的技术博客！这里分享各种技术教程、开发经验和实用工具。</p>
-    <p>涵盖系统运维、Web开发、数据库管理等多个技术领域。</p>
-  </div>
-</div>
+<pre>{{postsData}}</pre>
 
 <!-- 搜索和筛选 -->
 <div class="blog-controls">

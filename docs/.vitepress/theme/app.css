@@ -1,1 +1,13 @@
 @import "tailwindcss";
+
+:root {
+  --vp-c-brand-1: #21A4B1;
+  --vp-c-brand-2: #46C1D0;
+  --vp-c-brand-3: #6ADEC9;
+  --vp-c-brand-4: #8FE8E3;
+  --vp-c-brand-5: #B4F2F8;
+  --vp-c-brand-6: #D9FAFA;
+  --vp-c-brand-7: #FFFFFF;
+  --vp-c-brand-8: #000000;
+  --vp-c-brand-9: #000000;
+}

@@ -1,4 +1,5 @@
 import { createContentLoader } from 'vitepress'
+import { generateExcerpt } from './utils/index.js'
 
 export default createContentLoader('posts/*.md', {
   includeSrc: false, // 不包含原始markdown内容
@@ -10,7 +11,10 @@ export default createContentLoader('posts/*.md', {
       .map(({ url, frontmatter, excerpt }) => ({
         title: frontmatter.title,
         url,
-        excerpt: excerpt || frontmatter.description || '',
+        excerpt: generateExcerpt(excerpt || frontmatter.description || '', {
+          maxLength: 150,
+          stripTags: true
+        }),
         date: frontmatter.date,
         lastUpdated: frontmatter.lastUpdated,
         category: frontmatter.category || '其他',

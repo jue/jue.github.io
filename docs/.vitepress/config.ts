@@ -44,17 +44,15 @@ export default defineConfig({
     // 导航菜单
     nav: [
       { text: '首页', link: '/' },
-      { text: '博客', link: '/blog' },
-      { text: '文章', link: '/posts/' },
       {
-        text: '分类',
+        text: '文章分类',
         items: [
-          { text: '技术教程', link: '/blog?category=技术教程' },
-          { text: '开发相关', link: '/blog?category=开发相关' },
-          { text: '全部分类', link: '/tags' }
+          { text: '全部文章', link: '/posts' },
+          { text: '技术教程', link: '/posts?category=技术教程' },
+          { text: '开发相关', link: '/posts?category=开发相关' }
         ]
       },
-      { text: '归档', link: '/archive' },
+      { text: '教育邮箱', link: 'http://edumail.nipao.com' },
       { text: '关于', link: '/about' }
     ],
 
