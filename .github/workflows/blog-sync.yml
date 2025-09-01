@@ -24,6 +24,13 @@ jobs:
       - name: Checkout Repository
         uses: actions/checkout@v4
 
+      # 步骤一点五：安装翻译依赖
+      # Step 1.5: Install translation dependencies
+      - name: Install Translation Dependencies
+        run: |
+          npm install google-translate-api-x
+          npm install pinyin
+
       # 步骤二：处理 Issue 关闭事件（删除文章）
       # Step 2: Handle Issue close event (delete article)
       - name: Handle Closed Issue (Delete Post)
@@ -37,9 +44,7 @@ jobs:
 
             // 加载共享工具函数
             // Load shared utility functions
-            const utilsPath = path.join(process.cwd(), '.github/scripts/blog-utils.js');
-            const utilsCode = fs.readFileSync(utilsPath, 'utf8');
-            eval(utilsCode);
+            const BlogUtils = require('./.github/scripts/blog-utils.cjs');
             // --- 删除文章的脚本 ---
             // --- Script to delete the article ---
             const issue = context.payload.issue;
@@ -53,10 +58,10 @@ jobs:
               return;
             }
 
-            // 1. 直接通过issue标题计算文件路径
-            // 1. Calculate file path directly from issue title
+            // 1. 直接通过issue标题计算文件路径（使用异步翻译）
+            // 1. Calculate file path directly from issue title (using async translation)
             const title = issue.title;
-            const sanitizedTitle = title.replace(/[<>:"/\\|?*]/g, '').replace(/\s+/g, ' ').trim();
+            const sanitizedTitle = await BlogUtils.sanitizeFilenameAsync(title);
             const targetFilePath = `${BlogUtils.BLOG_DIR}/${sanitizedTitle}.md`;
 
             // 2. 尝试获取目标文件
@@ -115,9 +120,7 @@ jobs:
 
             // 加载共享工具函数
             // Load shared utility functions
-            const utilsPath = path.join(process.cwd(), '.github/scripts/blog-utils.js');
-            const utilsCode = fs.readFileSync(utilsPath, 'utf8');
-            eval(utilsCode);
+            const BlogUtils = require('./.github/scripts/blog-utils.cjs');
 
             // --- 创建或更新文章的脚本 ---
             // --- Script to create or update the article ---
@@ -147,10 +150,10 @@ jobs:
             let oldFilePath = null;
             let oldFileSha = null;
 
-            // 首先尝试通过当前标题查找文件
-            // First try to find file by current title
+            // 首先尝试通过当前标题查找文件（使用异步翻译）
+            // First try to find file by current title (using async translation)
             const currentTitle = issue.title;
-            const currentSanitizedTitle = currentTitle.replace(/[<>:"/\\|?*]/g, '').replace(/\s+/g, ' ').trim();
+            const currentSanitizedTitle = await BlogUtils.sanitizeFilenameAsync(currentTitle);
             const currentFilePath = `${BlogUtils.BLOG_DIR}/${currentSanitizedTitle}.md`;
 
             try {
@@ -201,9 +204,9 @@ jobs:
               }
             }
 
-            // 1. 使用共享工具函数生成博客文件内容
-            // 1. Use shared utility functions to generate blog file content
-            const blogFile = BlogUtils.createBlogFileContent(issue);
+            // 1. 使用共享工具函数生成博客文件内容（异步版本）
+            // 1. Use shared utility functions to generate blog file content (async version)
+            const blogFile = await BlogUtils.createBlogFileContentAsync(issue);
             const newFilePath = blogFile.filePath;
             const fileContent = blogFile.content;
 
@@ -247,9 +250,7 @@ jobs:
 
             // 加载共享工具函数
             // Load shared utility functions
-            const utilsPath = path.join(process.cwd(), '.github/scripts/blog-utils.js');
-            const utilsCode = fs.readFileSync(utilsPath, 'utf8');
-            eval(utilsCode);
+            const BlogUtils = require('./.github/scripts/blog-utils.cjs');
 
             // --- 更新 README.md 中的 Issue 列表 ---
             // --- Update Issue list in README.md ---

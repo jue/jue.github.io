@@ -3,7 +3,7 @@
 
 // 博客目录路径常量
 // Blog directory path constant
-const BLOG_DIR = 'docs/posts'
+const BLOG_DIR = 'content'
 
 /**
  * 生成 Front Matter (适配VitePress + createContentLoader)
@@ -94,16 +94,189 @@ function generateFrontMatter(issue) {
 }
 
 /**
- * 清理文件名中的非法字符
+ * 使用免费的 Google 翻译接口翻译中文到英文
+ * Translate Chinese to English using free Google Translate interface
+ * @param {string} text - 需要翻译的中文文本
+ * @returns {Promise<string>} - 翻译后的英文文本
+ */
+async function translateWithGoogleFree(text) {
+  try {
+    // 检查是否包含中文字符
+    if (!/[\u4e00-\u9fff]/.test(text)) {
+      return text; // 如果没有中文，直接返回
+    }
+
+    // 使用 google-translate-api-x 库（免费）
+    let translate;
+    try {
+      translate = require('google-translate-api-x');
+    } catch (requireError) {
+      console.error('Failed to load google-translate-api-x:', requireError.message);
+      return translateChineseToEnglishFallback(text);
+    }
+    
+    const result = await translate(text, { from: 'zh', to: 'en', forceFrom: true });
+
+    console.log(`Translated "${text}" to "${result.text}"`);
+    return result.text;
+  } catch (error) {
+    console.error('Free Google Translate error:', error.message);
+    // 如果翻译失败，回退到简单的中文词汇映射
+    return translateChineseToEnglishFallback(text);
+  }
+}
+
+// 加载拼音转换库
+let pinyinLib;
+try {
+  const pinyinModule = require('pinyin');
+  pinyinLib = pinyinModule.default || pinyinModule.pinyin || pinyinModule;
+} catch (error) {
+  console.log('拼音库加载失败，将使用基础词典:', error.message);
+}
+
+/**
+ * 回退的中文翻译方法（当 Google API 不可用时）
+ * 优先使用词典翻译，如果无法翻译则转换为拼音
+ * Fallback Chinese translation method (when Google API is unavailable)
+ * @param {string} text - 包含中文的文本
+ * @returns {string} - 翻译后的英文文本或拼音
+ */
+function translateChineseToEnglishFallback(text) {
+  // 基础词典翻译
+  const chineseToEnglish = {
+    '技术': 'technology',
+    '教程': 'tutorial',
+    '指南': 'guide',
+    '开发': 'development',
+    '编程': 'programming',
+    '前端': 'frontend',
+    '后端': 'backend',
+    '数据库': 'database',
+    '算法': 'algorithm',
+    '框架': 'framework',
+    '工具': 'tools',
+    '配置': 'configuration',
+    '部署': 'deployment',
+    '优化': 'optimization',
+    '调试': 'debugging',
+    '测试': 'testing',
+    '文档': 'documentation',
+    '项目': 'project',
+    '应用': 'application',
+    '系统': 'system',
+    '网站': 'website',
+    '博客': 'blog',
+    '文章': 'article',
+    '笔记': 'notes',
+    '总结': 'summary',
+    '分享': 'sharing',
+    '经验': 'experience',
+    '实践': 'practice',
+    '解决方案': 'solution',
+    '问题': 'problem',
+    '错误': 'error',
+    '修复': 'fix',
+    '更新': 'update',
+    '新功能': 'new-feature',
+    '版本': 'version',
+    '发布': 'release',
+    '安装': 'installation',
+    '使用': 'usage',
+    '介绍': 'introduction',
+    '入门': 'getting-started',
+    '高级': 'advanced',
+    '基础': 'basic',
+    '深入': 'deep-dive',
+    '原理': 'principle',
+    '源码': 'source-code',
+    '分析': 'analysis',
+    '比较': 'comparison',
+    '选择': 'choice',
+    '推荐': 'recommendation',
+    'Vue': 'vue',
+    'React': 'react',
+    'Node': 'node',
+    'JavaScript': 'javascript',
+    'TypeScript': 'typescript',
+    'CSS': 'css',
+    'HTML': 'html'
+  };
+
+  let result = text;
+  
+  // 首先使用词典进行翻译
+  Object.keys(chineseToEnglish).forEach(chinese => {
+    const english = chineseToEnglish[chinese];
+    result = result.replace(new RegExp(chinese, 'g'), english);
+  });
+  
+  // 如果还有中文字符，尝试转换为拼音
+  if (/[\u4e00-\u9fff]/.test(result) && pinyinLib && typeof pinyinLib === 'function') {
+    try {
+      // 将剩余的中文转换为拼音
+      result = result.replace(/[\u4e00-\u9fff]+/g, (match) => {
+        const pinyinResult = pinyinLib(match, {
+          style: pinyinLib.STYLE_NORMAL || 0, // 不带声调的拼音
+          heteronym: false // 不显示多音字的多个读音
+        });
+        return pinyinResult.map(item => Array.isArray(item) ? item[0] : item).join('-');
+      });
+    } catch (error) {
+      console.log('拼音转换失败:', error.message);
+      // 如果拼音转换失败，移除剩余的中文字符
+      result = result.replace(/[\u4e00-\u9fff]/g, '');
+    }
+  } else if (/[\u4e00-\u9fff]/.test(result)) {
+    // 如果没有拼音库，移除剩余的中文字符
+    result = result.replace(/[\u4e00-\u9fff]/g, '');
+  }
+  
+  return result;
+}
+
+/**
+ * 清理文件名中的非法字符（异步版本，支持 Google 翻译）
+ * Sanitize filename by removing illegal characters (async version with Google Translate)
+ * @param {string} title - 原始标题
+ * @returns {Promise<string>} - 清理后的文件名
+ */
+async function sanitizeFilenameAsync(title) {
+  try {
+    // 首先使用 Google 翻译
+    let translatedTitle = await translateWithGoogleFree(title);
+    
+    return translatedTitle
+      .replace(/[<>:"/\\|?*]/g, '') // 移除非法字符
+      .replace(/\s+/g, '-') // 空格替换为中划线
+      .replace(/-+/g, '-') // 多个连续中划线替换为单个
+      .replace(/^-+|-+$/g, '') // 移除开头和结尾的中划线
+      .toLowerCase() // 转换为小写
+      .trim();
+  } catch (error) {
+    console.error('Error in sanitizeFilenameAsync:', error.message);
+    // 如果异步翻译失败，回退到同步方法
+    return sanitizeFilename(title);
+  }
+}
+
+/**
+ * 清理文件名中的非法字符（保持原有的同步版本作为回退）
  * Sanitize filename by removing illegal characters
  * @param {string} title - 原始标题
  * @returns {string} - 清理后的文件名
  */
 function sanitizeFilename(title) {
-  return title
-    .replace(/[<>:"/\\|?*]/g, '')
-    .replace(/\s+/g, ' ')
-    .trim()
+  // 使用回退翻译方法
+  let translatedTitle = translateChineseToEnglishFallback(title);
+  
+  return translatedTitle
+    .replace(/[<>:"/\\|?*]/g, '') // 移除非法字符
+    .replace(/\s+/g, '-') // 空格替换为中划线
+    .replace(/-+/g, '-') // 多个连续中划线替换为单个
+    .replace(/^-+|-+$/g, '') // 移除开头和结尾的中划线
+    .toLowerCase() // 转换为小写
+    .trim();
 }
 
 /**
@@ -203,7 +376,26 @@ function generateReadmeContent(issuesByYearMonth, totalCount) {
 }
 
 /**
- * 创建博客文件内容
+ * 创建博客文件内容（异步版本，支持 Google 翻译）
+ * Create blog file content (async version with Google Translate)
+ * @param {Object} issue - GitHub issue 对象
+ * @returns {Promise<Object>} - 包含文件路径和内容的对象
+ */
+async function createBlogFileContentAsync(issue) {
+  const frontMatter = generateFrontMatter(issue);
+  const sanitizedTitle = await sanitizeFilenameAsync(issue.title);
+  const filePath = `${BLOG_DIR}/${sanitizedTitle}.md`;
+  const content = frontMatter + (issue.body || '');
+
+  return {
+    filePath,
+    content,
+    filename: `${sanitizedTitle}.md`
+  };
+}
+
+/**
+ * 创建博客文件内容（保持原有的同步版本作为回退）
  * Create blog file content
  * @param {Object} issue - GitHub issue 对象
  * @returns {Object} - 包含文件路径和内容的对象
@@ -363,8 +555,8 @@ description: 技术分享与实战教程
         issue.author
           ? issue.author.login
           : issue.user
-          ? issue.user.login
-          : 'Unknown'
+            ? issue.user.login
+            : 'Unknown'
       }\n`
       content += `> \n`
 
@@ -521,9 +713,13 @@ const BlogUtils = {
   BLOG_DIR,
   generateFrontMatter,
   sanitizeFilename,
+  sanitizeFilenameAsync,
+  translateWithGoogleFree,
+  translateChineseToEnglishFallback,
   groupIssuesByYearMonth,
   generateReadmeContent,
   createBlogFileContent,
+  createBlogFileContentAsync,
   groupIssuesByCategory,
   generatePaginationInfo,
   generateBlogIndexContent,
@@ -531,12 +727,22 @@ const BlogUtils = {
   generateBlogIndexStyles
 }
 
+// 调试信息
+console.log('BlogUtils对象创建完成，包含属性:', Object.keys(BlogUtils));
+console.log('module类型:', typeof module);
+console.log('module.exports类型:', typeof module?.exports);
+
 // 兼容不同的模块系统
 if (typeof module !== 'undefined' && module.exports) {
-  module.exports = BlogUtils
+  console.log('设置module.exports前:', module.exports);
+  module.exports = BlogUtils;
+  console.log('设置module.exports后:', module.exports);
+  console.log('BlogUtils已通过module.exports导出');
 } else if (typeof global !== 'undefined') {
   global.BlogUtils = BlogUtils
+  console.log('BlogUtils已设置到global');
 } else {
   // 直接在全局作用域中定义
   this.BlogUtils = BlogUtils
+  console.log('BlogUtils已设置到this');
 }

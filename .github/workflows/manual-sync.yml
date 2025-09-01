@@ -1,6 +1,6 @@
 # .github/workflows/manual-sync.yml
 
-name: Manual Issues Sync
+name: Manual Issues Sync 
 
 # 手动触发工作流
 # Manual trigger workflow
@@ -29,6 +29,11 @@ jobs:
         with:
           token: ${{ secrets.TOKEN }}
 
+      - name: Install dependencies
+        run: |
+          npm install google-translate-api-x
+          npm install pinyin
+
       - name: Clear Existing Docs (Optional)
         if: ${{ github.event.inputs.clear_docs == 'true' }}
         run: |
@@ -47,10 +52,8 @@ jobs:
             const path = require('path');
 
             // 加载共享工具函数
-            // Load shared utility functions
-            const utilsPath = path.join(process.cwd(), '.github/scripts/blog-utils.js');
-            const utilsCode = fs.readFileSync(utilsPath, 'utf8');
-            eval(utilsCode);
+          // Load shared utility functions
+          const BlogUtils = require('./.github/scripts/blog-utils.cjs');
 
             // 确保博客目录存在
             if (!fs.existsSync(BlogUtils.BLOG_DIR)) {
@@ -71,16 +74,16 @@ jobs:
 
             console.log(`Found $${issues.data.length} open issues`);
 
-            // 为每个issue创建markdown文件
+            // 为每个issue创建markdown文件（使用异步翻译）
             for (const issue of issues.data) {
               // 跳过pull requests
               if (issue.pull_request) {
                 continue;
               }
               
-              // 使用共享工具函数生成博客文件内容
-              // Use shared utility function to generate blog file content
-              const blogFile = BlogUtils.createBlogFileContent(issue);
+              // 使用共享工具函数生成博客文件内容（异步版本）
+              // Use shared utility function to generate blog file content (async version)
+              const blogFile = await BlogUtils.createBlogFileContentAsync(issue);
               const filepath = path.join(BlogUtils.BLOG_DIR, path.basename(blogFile.filePath));
               const content = blogFile.content;
               
@@ -99,9 +102,7 @@ jobs:
 
             // 加载共享工具函数
             // Load shared utility functions
-            const utilsPath = path.join(process.cwd(), '.github/scripts/blog-utils.js');
-            const utilsCode = fs.readFileSync(utilsPath, 'utf8');
-            eval(utilsCode);
+            const BlogUtils = require('./.github/scripts/blog-utils.cjs');
 
             // 获取仓库所有者
             const owner = context.repo.owner;
