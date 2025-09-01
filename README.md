@@ -8,7 +8,7 @@
 
 - [【进阶篇】巧用CDN：为家庭服务套上“马甲”，实现完美HTTPS访问](https://github.com/jue/jue.github.io/issues/5)
 - [【实战教程】突破端口封锁：如何使用1Panel在家庭网络中发布多个HTTPS服务](https://github.com/jue/jue.github.io/issues/4)
-- [【Proxmox VE 终极教程】如何实现虚拟机（Guest OS）宕机后自动重启？](https://github.com/jue/jue.github.io/issues/3)
+- [Proxmox VE下实现虚拟机（Guest OS）宕机后自动重启的问题](https://github.com/jue/jue.github.io/issues/3)
 
 ### 2025年七月
 
@@ -24,4 +24,4 @@
 
 📊 **统计信息**：共有 5 篇文章
 
-🔄 **最后更新**：2025/9/1 23:34:03
+🔄 **最后更新**：2025/9/1 23:36:38
