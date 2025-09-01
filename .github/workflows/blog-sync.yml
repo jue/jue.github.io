@@ -95,12 +95,17 @@ jobs:
                 });
                 console.log(`Successfully deleted ${targetFilePath}`);
                 
-                // 5. (可选) 添加评论告知已删除
-                // 5. (Optional) Add a comment to notify of deletion
+                // 5. 同步删除到 nipao.site 仓库
+                // 5. Sync deletion to nipao.site repository
+                const targetRepo = { owner: 'jue', repo: 'nipao.site' };
+                await BlogUtils.deleteFileFromRepo(github, targetRepo, targetFilePath, `Delete blog: Closed issue #${issueNumber}`, issueNumber);
+                
+                // 6. (可选) 添加评论告知已删除
+                // 6. (Optional) Add a comment to notify of deletion
                 await github.rest.issues.createComment({
                   ...repoInfo,
                   issue_number: issueNumber,
-                  body: `🗑️ 博客文章已根据 Issue 关闭状态自动删除。`
+                  body: `🗑️ 博客文章已根据 Issue 关闭状态自动删除，并同步到 nipao.site 仓库。`
                 });
               } else {
                 console.log(`File ${targetFilePath} exists but doesn't match issue #${issueNumber}.`);
@@ -243,6 +248,21 @@ jobs:
             });
 
             console.log(`Successfully processed ${newFilePath}`);
+
+            // 5. 同步到 nipao.site 仓库
+            // 5. Sync to nipao.site repository
+            const targetRepo = { owner: 'jue', repo: 'nipao.site' };
+            
+            // 如果标题被修改，需要先删除目标仓库中的旧文件
+            // If title is modified, need to delete old file in target repository first
+            if (oldFilePath && oldFilePath !== newFilePath) {
+              await BlogUtils.deleteFileFromRepo(github, targetRepo, oldFilePath, `Rename blog: Delete old file for #${issueNumber}`, issueNumber);
+            }
+            
+            // 同步新文件到目标仓库
+            // Sync new file to target repository
+            const syncMessage = oldFilePath ? `Update blog: ${issue.title}` : `Create blog: ${issue.title}`;
+            await BlogUtils.syncFileToRepo(github, targetRepo, newFilePath, fileContent, syncMessage, issueNumber);
 
       # 步骤五：更新 README.md 中的 Issue 列表（独立步骤，适用于所有事件）
       # Step 5: Update Issue list in README.md (independent step for all events)

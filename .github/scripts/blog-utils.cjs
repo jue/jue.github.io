@@ -707,6 +707,183 @@ function generateBlogIndexStyles() {
 </style>`
 }
 
+/**
+ * 同步文件到目标仓库
+ * Sync file to target repository
+ * @param {Object} github - GitHub API 实例
+ * @param {Object} targetRepo - 目标仓库信息 {owner, repo}
+ * @param {string} filePath - 文件路径
+ * @param {string} content - 文件内容
+ * @param {string} message - 提交信息
+ * @param {string} issueNumber - Issue 编号（用于验证）
+ * @returns {Promise<boolean>} - 是否成功
+ */
+async function syncFileToRepo(github, targetRepo, filePath, content, message, issueNumber) {
+  try {
+    // 检查文件是否已存在
+    let existingFileSha = null;
+    try {
+      const { data: fileData } = await github.rest.repos.getContent({
+        owner: targetRepo.owner,
+        repo: targetRepo.repo,
+        path: filePath,
+      });
+      
+      // 验证文件确实对应当前issue
+      const fileContent = Buffer.from(fileData.content, 'base64').toString('utf8');
+      const match = fileContent.match(/issue_number:\s*(\d+)/);
+      if (match && parseInt(match[1], 10) === parseInt(issueNumber, 10)) {
+        existingFileSha = fileData.sha;
+        console.log(`Found existing file in ${targetRepo.owner}/${targetRepo.repo}: ${filePath}`);
+      }
+    } catch (error) {
+      if (error.status !== 404) {
+        console.error(`Error checking file in ${targetRepo.owner}/${targetRepo.repo}:`, error.message);
+        return false;
+      }
+      // 文件不存在，将创建新文件
+    }
+
+    // 创建或更新文件
+    await github.rest.repos.createOrUpdateFileContents({
+      owner: targetRepo.owner,
+      repo: targetRepo.repo,
+      path: filePath,
+      message: message,
+      content: Buffer.from(content).toString('base64'),
+      sha: existingFileSha,
+      committer: { name: 'GitHub Actions Bot', email: 'actions@github.com' }
+    });
+
+    console.log(`Successfully synced to ${targetRepo.owner}/${targetRepo.repo}: ${filePath}`);
+    return true;
+  } catch (error) {
+    console.error(`Error syncing to ${targetRepo.owner}/${targetRepo.repo}:`, error.message);
+    return false;
+  }
+}
+
+/**
+ * 从目标仓库删除文件
+ * Delete file from target repository
+ * @param {Object} github - GitHub API 实例
+ * @param {Object} targetRepo - 目标仓库信息 {owner, repo}
+ * @param {string} filePath - 文件路径
+ * @param {string} message - 提交信息
+ * @param {string} issueNumber - Issue 编号（用于验证）
+ * @returns {Promise<boolean>} - 是否成功
+ */
+async function deleteFileFromRepo(github, targetRepo, filePath, message, issueNumber) {
+  try {
+    // 获取文件信息
+    const { data: fileData } = await github.rest.repos.getContent({
+      owner: targetRepo.owner,
+      repo: targetRepo.repo,
+      path: filePath,
+    });
+
+    // 验证文件确实对应当前issue
+    const fileContent = Buffer.from(fileData.content, 'base64').toString('utf8');
+    const match = fileContent.match(/issue_number:\s*(\d+)/);
+    if (match && parseInt(match[1], 10) === parseInt(issueNumber, 10)) {
+      // 删除文件
+      await github.rest.repos.deleteFile({
+        owner: targetRepo.owner,
+        repo: targetRepo.repo,
+        path: filePath,
+        message: message,
+        sha: fileData.sha,
+        committer: { name: 'GitHub Actions Bot', email: 'actions@github.com' }
+      });
+      console.log(`Successfully deleted from ${targetRepo.owner}/${targetRepo.repo}: ${filePath}`);
+      return true;
+    } else {
+      console.log(`File ${filePath} in ${targetRepo.owner}/${targetRepo.repo} doesn't match issue #${issueNumber}`);
+      return false;
+    }
+  } catch (error) {
+    if (error.status === 404) {
+      console.log(`File not found in ${targetRepo.owner}/${targetRepo.repo}: ${filePath}`);
+      return true; // 文件不存在也算成功
+    } else {
+      console.error(`Error deleting from ${targetRepo.owner}/${targetRepo.repo}:`, error.message);
+      return false;
+    }
+  }
+}
+
+/**
+ * 智能查找目标仓库中的旧文件
+ * Smart search for old files in target repository
+ * @param {Object} github - GitHub API 实例
+ * @param {Object} targetRepo - 目标仓库信息 {owner, repo}
+ * @param {string} issueNumber - Issue 编号
+ * @param {string} currentFilePath - 当前文件路径
+ * @returns {Promise<Object|null>} - 文件信息或null
+ */
+async function findOldFileInRepo(github, targetRepo, issueNumber, currentFilePath) {
+  try {
+    // 首先尝试通过当前路径查找
+    try {
+      const { data: fileData } = await github.rest.repos.getContent({
+        owner: targetRepo.owner,
+        repo: targetRepo.repo,
+        path: currentFilePath,
+      });
+      
+      const fileContent = Buffer.from(fileData.content, 'base64').toString('utf8');
+      const match = fileContent.match(/issue_number:\s*(\d+)/);
+      if (match && parseInt(match[1], 10) === parseInt(issueNumber, 10)) {
+        return { path: currentFilePath, sha: fileData.sha };
+      }
+    } catch (error) {
+      if (error.status !== 404) {
+        console.error(`Error checking current path in ${targetRepo.owner}/${targetRepo.repo}:`, error.message);
+      }
+    }
+
+    // 如果当前路径找不到，遍历content目录查找
+    try {
+      const { data: files } = await github.rest.repos.getContent({
+        owner: targetRepo.owner,
+        repo: targetRepo.repo,
+        path: BLOG_DIR
+      });
+      
+      for (const file of files) {
+        if (!file.name.endsWith('.md')) continue;
+        
+        try {
+          const { data: content } = await github.rest.repos.getContent({
+            owner: targetRepo.owner,
+            repo: targetRepo.repo,
+            path: file.path
+          });
+          
+          const fileContent = Buffer.from(content.content, 'base64').toString('utf8');
+          const match = fileContent.match(/issue_number:\s*(\d+)/);
+          if (match && parseInt(match[1], 10) === parseInt(issueNumber, 10)) {
+            return { path: file.path, sha: file.sha };
+          }
+        } catch (error) {
+          console.error(`Error reading file ${file.path} in ${targetRepo.owner}/${targetRepo.repo}:`, error.message);
+        }
+      }
+    } catch (error) {
+      if (error.status === 404) {
+        console.log(`Content directory not found in ${targetRepo.owner}/${targetRepo.repo}`);
+      } else {
+        console.error(`Error searching files in ${targetRepo.owner}/${targetRepo.repo}:`, error.message);
+      }
+    }
+
+    return null;
+  } catch (error) {
+    console.error(`Error finding old file in ${targetRepo.owner}/${targetRepo.repo}:`, error.message);
+    return null;
+  }
+}
+
 // 导出函数供 GitHub Actions 使用
 // Export functions for GitHub Actions
 const BlogUtils = {
@@ -724,7 +901,10 @@ const BlogUtils = {
   generatePaginationInfo,
   generateBlogIndexContent,
   generatePaginationNav,
-  generateBlogIndexStyles
+  generateBlogIndexStyles,
+  syncFileToRepo,
+  deleteFileFromRepo,
+  findOldFileInRepo
 }
 
 // 调试信息
