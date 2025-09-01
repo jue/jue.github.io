@@ -52,8 +52,8 @@ jobs:
             const path = require('path');
 
             // 加载共享工具函数
-          // Load shared utility functions
-          const BlogUtils = require('./.github/scripts/blog-utils.cjs');
+            // Load shared utility functions
+            const BlogUtils = require('./.github/scripts/blog-utils.cjs');
 
             // 确保博客目录存在
             if (!fs.existsSync(BlogUtils.BLOG_DIR)) {
