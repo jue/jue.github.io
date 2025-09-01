@@ -24,15 +24,21 @@ jobs:
       - name: Checkout Repository
         uses: actions/checkout@v4
 
-      # 步骤一点五：安装翻译依赖
-      # Step 1.5: Install translation dependencies
-      - name: Install Translation Dependencies
-        run: |
-          npm install google-translate-api-x
-          npm install pinyin
+      # 步骤一点五：设置Node.js环境
+      # Step 1.5: Setup Node.js environment
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '18'
+          cache: 'npm'
 
-      # 步骤二：处理 Issue 关闭事件（删除文章）
-      # Step 2: Handle Issue close event (delete article)
+      # 步骤二：安装依赖（带缓存优化）
+      # Step 2: Install dependencies (with cache optimization)
+      - name: Install Dependencies
+        run: npm ci
+
+      # 步骤三：处理 Issue 关闭事件（删除文章）
+      # Step 3: Handle Issue close event (delete article)
       - name: Handle Closed Issue (Delete Post)
         if: github.event.action == 'closed'
         uses: actions/github-script@v7
@@ -107,8 +113,8 @@ jobs:
               }
             }
 
-      # 步骤三：处理 Issue 打开、编辑、重开、标签事件（创建或更新文章）
-      # Step 3: Handle Issue open, edit, reopen, label events (create or update article)
+      # 步骤四：处理 Issue 打开、编辑、重开、标签事件（创建或更新文章）
+      # Step 4: Handle Issue open, edit, reopen, label events (create or update article)
       - name: Handle Other Events (Create/Update Post)
         if: github.event.action != 'closed'
         uses: actions/github-script@v7
@@ -238,8 +244,8 @@ jobs:
 
             console.log(`Successfully processed ${newFilePath}`);
 
-      # 步骤四：更新 README.md 中的 Issue 列表（独立步骤，适用于所有事件）
-      # Step 4: Update Issue list in README.md (independent step for all events)
+      # 步骤五：更新 README.md 中的 Issue 列表（独立步骤，适用于所有事件）
+      # Step 5: Update Issue list in README.md (independent step for all events)
       - name: Update README Issue List
         uses: actions/github-script@v7
         with:

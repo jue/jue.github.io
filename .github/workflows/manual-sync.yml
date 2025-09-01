@@ -1,6 +1,6 @@
 # .github/workflows/manual-sync.yml
 
-name: Manual Issues Sync 
+name: Manual Issues Sync
 
 # 手动触发工作流
 # Manual trigger workflow
@@ -29,10 +29,14 @@ jobs:
         with:
           token: ${{ secrets.TOKEN }}
 
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '18'
+          cache: 'npm'
+
       - name: Install dependencies
-        run: |
-          npm install google-translate-api-x
-          npm install pinyin
+        run: npm ci
 
       - name: Clear Existing Docs (Optional)
         if: ${{ github.event.inputs.clear_docs == 'true' }}
