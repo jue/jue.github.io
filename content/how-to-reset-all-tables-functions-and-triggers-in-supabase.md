@@ -3,8 +3,8 @@ title: '如何重置supabase里所有表、函数和触发器'
 description: '最近在开发过程中，经常会遇到需要重置Supabase数据库的情况。这些情况包括： 1. 开发阶段的数据污染：在开发和测试阶段，我们可能会产生大量的测试数据，这些数据在项目上线或迭代到下一个阶段时就变得无用，甚至会干扰系统的正常运行。 2. 数据库结构变更：当项目需求发生重大变化，数据库的表结构、关系...'
 author: 'jue'
 date: 2025-05-05
-lastUpdated: 2025-05-08
-category: 'other'
+lastUpdated: 2025-09-02
+category: 'Tech Talk'
 wordCount: 1267
 issue_number: 1
 ---
