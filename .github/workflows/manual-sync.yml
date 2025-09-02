@@ -47,10 +47,10 @@ jobs:
             const fs = require('fs');
             const path = require('path');
             
-            // 加载共享工具函数
             const BlogUtils = require('./.github/scripts/blog-utils.cjs');
             
             // 清理本地content目录
+            // Clear local content directory
             if (fs.existsSync(BlogUtils.BLOG_DIR)) {
               const files = fs.readdirSync(BlogUtils.BLOG_DIR);
               for (const file of files) {
@@ -62,6 +62,7 @@ jobs:
             }
             
             // 清理 nipao.site 仓库的content目录
+            // Clear content directory in nipao.site repository
             const targetRepo = { owner: 'jue', repo: 'nipao.site' };
             try {
               const { data: files } = await github.rest.repos.getContent({
@@ -98,20 +99,21 @@ jobs:
           script: |
             const fs = require('fs');
             const path = require('path');
-
-            // 加载共享工具函数
-            // Load shared utility functions
+            
             const BlogUtils = require('./.github/scripts/blog-utils.cjs');
 
             // 确保博客目录存在
+            // Ensure blog directory exists
             if (!fs.existsSync(BlogUtils.BLOG_DIR)) {
               fs.mkdirSync(BlogUtils.BLOG_DIR, { recursive: true });
             }
 
             // 获取仓库所有者
+            // Get repository owner
             const owner = context.repo.owner;
 
             // 获取所有open状态的issues
+            // Get all open issues
             const issues = await github.rest.issues.listForRepo({
               owner: context.repo.owner,
               repo: context.repo.repo,
@@ -120,25 +122,29 @@ jobs:
               per_page: 100
             });
 
-            console.log(`Found $${issues.data.length} open issues`);
+            console.log(`Found ${issues.data.length} open issues`);
 
             // 目标仓库配置
+            // Target repository configuration
             const targetRepo = { owner: 'jue', repo: 'nipao.site' };
 
-            // 为每个issue创建markdown文件（使用异步翻译）
+            // 为每个issue创建markdown文件
+            // Create markdown file for each issue
             for (const issue of issues.data) {
               // 跳过pull requests
+              // Skip pull requests
               if (issue.pull_request) {
                 continue;
               }
               
-              // 使用共享工具函数生成博客文件内容（异步版本）
-              // Use shared utility function to generate blog file content (async version)
-              const blogFile = await BlogUtils.createBlogFileContentAsync(issue);
+              // 使用共享工具函数生成博客文件内容
+              // Use shared utility function to generate blog file content
+              const blogFile = BlogUtils.createBlogFileContent(issue);
               const filepath = path.join(BlogUtils.BLOG_DIR, path.basename(blogFile.filePath));
               const content = blogFile.content;
               
               // 写入本地文件
+              // Write local file
               fs.writeFileSync(filepath, content, 'utf8');
               console.log(`Created: ${path.basename(filepath)}`);
               
@@ -156,14 +162,14 @@ jobs:
             const fs = require('fs');
             const path = require('path');
 
-            // 加载共享工具函数
-            // Load shared utility functions
             const BlogUtils = require('./.github/scripts/blog-utils.cjs');
 
             // 获取仓库所有者
+            // Get repository owner
             const owner = context.repo.owner;
 
             // 获取所有open状态的issues
+            // Get all open issues
             const issues = await github.rest.issues.listForRepo({
               owner: context.repo.owner,
               repo: context.repo.repo,
@@ -173,9 +179,11 @@ jobs:
             });
 
             // 过滤掉pull requests
+            // Filter out pull requests
             const actualIssues = issues.data.filter(issue => !issue.pull_request);
 
             // 按创建时间分组
+            // Group by creation time
             const issuesByYearMonth = BlogUtils.groupIssuesByYearMonth(actualIssues);
 
             // 生成README内容
@@ -183,6 +191,7 @@ jobs:
             const readmeContent = BlogUtils.generateReadmeContent(issuesByYearMonth, actualIssues.length);
 
             // 写入README文件
+            // Write README file
             fs.writeFileSync('README.md', readmeContent, 'utf8');
             console.log('README.md updated successfully');
 
