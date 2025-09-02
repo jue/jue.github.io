@@ -3,8 +3,9 @@ title: 'Proxmox VE下实现虚拟机（Guest OS）宕机后自动重启的问题
 description: '前言：为什么需要这个功能？ 作为 Proxmox VE (PVE) 用户，我们都享受着它带来的强大虚拟化能力。但一个常见的痛点是：PVE 主机本身稳定如山，可里面的某台虚拟机（Guest OS）却可能因为应用 Bug、内存溢出或内核崩溃而陷入“假死”状态。此时，虚拟机进程在 PVE 上看是运行的，但...'
 author: 'jue'
 date: 2025-08-22
-lastUpdated: 2025-09-01
-category: 'other'
+lastUpdated: 2025-09-02
+category: 'Tech Talk'
+cover: 'https://github.com/user-attachments/assets/ca3655dd-9bac-411c-9baa-ecb0e6262c0b'
 wordCount: 1752
 issue_number: 3
 ---
