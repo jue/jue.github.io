@@ -6,17 +6,17 @@
 
 ### 2025年八月
 
-- [进阶篇-巧用CDN：为家庭服务套上“马甲”，实现完美HTTPS访问](https://www.nipao.com/post/进阶篇-巧用cdn：为家庭服务套上“马甲”，实现完美https访问)
-- [实战教程-突破端口封锁：如何使用1Panel在家庭网络中发布多个HTTPS服务](https://www.nipao.com/post/实战教程-突破端口封锁：如何使用1panel在家庭网络中发布多个https服务)
-- [Proxmox VE下实现虚拟机（Guest OS）宕机后自动重启的问题](https://www.nipao.com/post/proxmox-ve下实现虚拟机（guest-os）宕机后自动重启的问题)
+- [进阶篇-巧用CDN：为家庭服务套上“马甲”，实现完美HTTPS访问](https://www.nipao.com/post/advanced-chapter-clever-cdn-put-a-vas-on-family-services-to-achieve-perfect-https-access)
+- [实战教程-突破端口封锁：如何使用1Panel在家庭网络中发布多个HTTPS服务](https://www.nipao.com/post/practical-tutorial-breakthrough-of-port-blockade-how-to-use-1panel-to-publish-multiple-https-services-on-your-home-network)
+- [Proxmox VE下实现虚拟机（Guest OS）宕机后自动重启的问题](https://www.nipao.com/post/proxmox-ve-implementing-automatic-restart-after-the-virtual-machine-guest-os-is-down)
 
 ### 2025年七月
 
-- [理解Autodesk Viewer3D文档的使用方法](https://www.nipao.com/post/理解autodesk-viewer3d文档的使用方法)
+- [理解Autodesk Viewer3D文档的使用方法](https://www.nipao.com/post/understand-how-to-use-autodesk-viewer3d-documents)
 
 ### 2025年五月
 
-- [如何重置supabase里所有表、函数和触发器](https://www.nipao.com/post/如何重置supabase里所有表、函数和触发器)
+- [如何重置supabase里所有表、函数和触发器](https://www.nipao.com/post/how-to-reset-all-tables-functions-and-triggers-in-supabase)
 
 ---
 
@@ -24,4 +24,4 @@
 
 📊 **统计信息**：共有 5 篇文章
 
-🔄 **最后更新**：2025/9/2 11:46:40
+🔄 **最后更新**：2025/9/2 12:00:02
