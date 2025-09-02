@@ -3,8 +3,8 @@ title: '理解Autodesk Viewer3D文档的使用方法'
 description: '理解Autodesk Viewer3D文档的使用方法 _Exported on 2025/7/1 at GMT+8 16:49:48 from Cursor (1.1.6)_ --- User @https://aps.autodesk.com/en/docs/viewer/v7/reference...'
 author: 'jue'
 date: 2025-07-01
-lastUpdated: 2025-08-29
-category: 'other'
+lastUpdated: 2025-09-02
+category: 'Tech Talk'
 wordCount: 3506
 issue_number: 2
 ---
