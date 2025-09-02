@@ -10,6 +10,39 @@ const BLOG_DIR = 'content'
 const BLOG_BASE_URL = 'https://www.nipao.com/post'
 
 /**
+ * 提取内容中的第一张图片地址
+ * Extract the first image URL from content
+ * @param {string} content - 内容文本
+ * @returns {string} - 第一张图片的URL，如果没有则返回空字符串
+ */
+function extractFirstImageUrl(content) {
+  if (!content) return ''
+  
+  // 匹配 markdown 格式的图片: ![alt](url)
+  const markdownImageRegex = /!\[.*?\]\((.*?)\)/
+  const markdownMatch = content.match(markdownImageRegex)
+  if (markdownMatch && markdownMatch[1]) {
+    return markdownMatch[1].trim()
+  }
+  
+  // 匹配 HTML img 标签: <img src="url">
+  const htmlImageRegex = /<img[^>]+src=["']([^"']+)["'][^>]*>/i
+  const htmlMatch = content.match(htmlImageRegex)
+  if (htmlMatch && htmlMatch[1]) {
+    return htmlMatch[1].trim()
+  }
+  
+  // 匹配直接的图片URL（以常见图片扩展名结尾）
+  const directImageRegex = /https?:\/\/[^\s]+\.(jpg|jpeg|png|gif|webp|svg)(\?[^\s]*)?/i
+  const directMatch = content.match(directImageRegex)
+  if (directMatch && directMatch[0]) {
+    return directMatch[0].trim()
+  }
+  
+  return ''
+}
+
+/**
  * 生成 Front Matter
  * Generate Front Matter
  * @param {Object} issue - GitHub issue 对象
@@ -56,6 +89,10 @@ function generateFrontMatter(issue) {
     }
   }
 
+  // 提取第一张图片作为封面
+  // Extract first image as cover
+  const cover = extractFirstImageUrl(issue.body || '')
+
   // 估算字数（中文按字符计算，英文按单词计算）
   // Estimate word count
   let wordCount = 0
@@ -75,6 +112,12 @@ function generateFrontMatter(issue) {
     `lastUpdated: ${updatedAt}`,
     `category: '${category.replace(/'/g, "\'")}'`
   ]
+
+  // 添加封面图片（如果有）
+  // Add cover image (if any)
+  if (cover) {
+    frontMatterLines.push(`cover: '${cover.replace(/'/g, "\'")}'`)
+  }
 
   // 添加标签（如果有）
   // Add tags (if any)
@@ -458,6 +501,7 @@ async function deleteFileFromRepo(github, targetRepo, filePath, message, issueNu
 const BlogUtils = {
   BLOG_DIR,
   BLOG_BASE_URL,
+  extractFirstImageUrl,
   generateFrontMatter,
   sanitizeFilename,
   sanitizeFilenameAsync,
