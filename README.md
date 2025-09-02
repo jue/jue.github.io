@@ -4,6 +4,10 @@
 
 ## 📝 文章列表
 
+### 2025年九月
+
+- [释放 Nuxt Content 的全部潜力：深入了解查询、导航与搜索](https://www.nipao.com/post/unlock-the-full-potential-of-nuxt-content-in-depth-knowledge-of-query-navigation-and-search)
+
 ### 2025年八月
 
 - [进阶篇-巧用CDN：为家庭服务套上“马甲”，实现完美HTTPS访问](https://www.nipao.com/post/advanced-chapter-clever-cdn-put-a-vas-on-family-services-to-achieve-perfect-https-access)
@@ -22,6 +26,6 @@
 
 💡 **使用说明**：创建新的 Issue 即可自动生成博客文章，文章内容为 Issue 的正文部分。
 
-📊 **统计信息**：共有 5 篇文章
+📊 **统计信息**：共有 6 篇文章
 
-🔄 **最后更新**：2025/9/2 12:00:02
+🔄 **最后更新**：2025/9/2 18:38:56
