@@ -46,7 +46,7 @@ jobs:
           github-token: ${{ secrets.TOKEN }}
           script: |
             const BlogUtils = require('./.github/scripts/blog-utils.cjs');
-            
+
             const issue = context.payload.issue;
             const issueNumber = issue.number;
             const repoInfo = { owner: context.repo.owner, repo: context.repo.repo };
@@ -120,7 +120,7 @@ jobs:
           github-token: ${{ secrets.TOKEN }}
           script: |
             const BlogUtils = require('./.github/scripts/blog-utils.cjs');
-            
+
             const issue = context.payload.issue;
             const issueNumber = issue.number;
             const repoInfo = { owner: context.repo.owner, repo: context.repo.repo };
@@ -142,9 +142,9 @@ jobs:
               return;
             }
 
-            // 生成博客文件内容
-            // Generate blog file content
-            const blogFile = BlogUtils.createBlogFileContent(issue);
+            // 生成博客文件内容（异步翻译版本）
+            // Generate blog file content (async translation version)
+            const blogFile = await BlogUtils.createBlogFileContentAsync(issue);
             const filePath = blogFile.filePath;
             const fileContent = blogFile.content;
 
@@ -202,7 +202,7 @@ jobs:
           github-token: ${{ secrets.TOKEN }}
           script: |
             const BlogUtils = require('./.github/scripts/blog-utils.cjs');
-            
+
             const repoInfo = { owner: context.repo.owner, repo: context.repo.repo };
 
             try {
@@ -222,9 +222,9 @@ jobs:
               const openIssues = issues.filter(issue => !issue.pull_request && issue.state === 'open');
               const issuesByYearMonth = BlogUtils.groupIssuesByYearMonth(openIssues);
 
-              // 生成 README 内容
-              // Generate README content
-              const readmeContent = BlogUtils.generateReadmeContent(issuesByYearMonth, openIssues.length);
+              // 生成 README 内容（异步翻译版本）
+              // Generate README content (async translation version)
+              const readmeContent = await BlogUtils.generateReadmeContentAsync(issuesByYearMonth, openIssues.length);
 
               // 获取当前 README.md 文件（如果存在）
               // Get current README.md file (if exists)

@@ -98,6 +98,24 @@ function generateFrontMatter(issue) {
 }
 
 /**
+ * 使用Google翻译API翻译文本
+ * Translate text using Google Translate API
+ * @param {string} text - 要翻译的文本
+ * @param {string} targetLang - 目标语言代码，默认为'en'
+ * @returns {Promise<string>} - 翻译后的文本
+ */
+async function translateText(text, targetLang = 'en') {
+  try {
+    const response = await fetch(`https://translate.googleapis.com/translate_a/single?client=gtx&sl=auto&tl=${targetLang}&dt=t&q=${encodeURIComponent(text)}`);
+    const data = await response.json();
+    return data[0][0][0] || text;
+  } catch (error) {
+    console.warn('Translation failed, using original text:', error.message);
+    return text;
+  }
+}
+
+/**
  * 清理文件名中的非法字符
  * Sanitize filename by removing illegal characters
  * @param {string} title - 原始标题
@@ -106,11 +124,23 @@ function generateFrontMatter(issue) {
 function sanitizeFilename(title) {
   return title
     .replace(/[<>:"/\\|?*]/g, '') // 移除非法字符
+    .replace(/[^a-zA-Z0-9\s-]/g, '') // 只保留字母、数字、空格和中划线
     .replace(/\s+/g, '-') // 空格替换为中划线
     .replace(/-+/g, '-') // 多个连续中划线替换为单个
     .replace(/^-+|-+$/g, '') // 移除开头和结尾的中划线
     .toLowerCase() // 转换为小写
     .trim()
+}
+
+/**
+ * 异步清理文件名（包含翻译）
+ * Async sanitize filename with translation
+ * @param {string} title - 原始标题
+ * @returns {Promise<string>} - 清理后的英文文件名
+ */
+async function sanitizeFilenameAsync(title) {
+  const translatedTitle = await translateText(title, 'en');
+  return sanitizeFilename(translatedTitle);
 }
 
 /**
@@ -144,6 +174,73 @@ function groupIssuesByYearMonth(issues) {
   })
 
   return issuesByYearMonth
+}
+
+/**
+ * 异步生成 README 内容（包含翻译）
+ * Async generate README content with translation
+ * @param {Object} issuesByYearMonth - 按年月分组的 issues
+ * @param {number} totalCount - 总文章数
+ * @returns {Promise<string>} - README 内容
+ */
+async function generateReadmeContentAsync(issuesByYearMonth, totalCount) {
+  let readmeContent = '# NIPAO Post\n\n'
+  readmeContent +=
+    '这是一个基于 GitHub Issues 的博客系统。每个 Issue 会自动转换为博客文章。\n\n'
+  readmeContent += '## 📝 文章列表\n\n'
+
+  // 按年月倒序排列
+  const sortedYearMonths = Object.keys(issuesByYearMonth).sort().reverse()
+
+  if (sortedYearMonths.length === 0) {
+    readmeContent += '暂无文章。\n\n'
+  } else {
+    for (const yearMonth of sortedYearMonths) {
+      const [year, month] = yearMonth.split('-')
+      const monthNames = [
+        '一月',
+        '二月',
+        '三月',
+        '四月',
+        '五月',
+        '六月',
+        '七月',
+        '八月',
+        '九月',
+        '十月',
+        '十一月',
+        '十二月'
+      ]
+      const monthName = monthNames[parseInt(month) - 1]
+
+      readmeContent += `### ${year}年${monthName}\n\n`
+
+      // 按 issue 编号倒序排列（最新的在前）
+      const sortedIssues = issuesByYearMonth[yearMonth].sort(
+        (a, b) => b.number - a.number
+      )
+
+      for (const issue of sortedIssues) {
+        // 生成翻译后的清理文件名作为URL路径
+        // Generate translated sanitized filename as URL path
+        const sanitizedTitle = await sanitizeFilenameAsync(issue.title)
+        const blogUrl = `${BLOG_BASE_URL}/${sanitizedTitle}`
+        readmeContent += `- [${issue.title}](${blogUrl})\n`
+      }
+
+      readmeContent += '\n'
+    }
+  }
+
+  readmeContent += '---\n\n'
+  readmeContent +=
+    '💡 **使用说明**：创建新的 Issue 即可自动生成博客文章，文章内容为 Issue 的正文部分。\n\n'
+  readmeContent += `📊 **统计信息**：共有 ${totalCount} 篇文章\n\n`
+  readmeContent += `🔄 **最后更新**：${new Date().toLocaleString('zh-CN', {
+    timeZone: 'Asia/Shanghai'
+  })}\n`
+
+  return readmeContent
 }
 
 /**
@@ -222,6 +319,25 @@ function generateReadmeContent(issuesByYearMonth, totalCount) {
 function createBlogFileContent(issue) {
   const frontMatter = generateFrontMatter(issue)
   const sanitizedTitle = sanitizeFilename(issue.title)
+  const filePath = `${BLOG_DIR}/${sanitizedTitle}.md`
+  const content = frontMatter + (issue.body || '')
+
+  return {
+    filePath,
+    content,
+    filename: `${sanitizedTitle}.md`
+  }
+}
+
+/**
+ * 异步创建博客文件内容（包含翻译）
+ * Async create blog file content with translation
+ * @param {Object} issue - GitHub issue 对象
+ * @returns {Promise<Object>} - 包含文件路径和内容的对象
+ */
+async function createBlogFileContentAsync(issue) {
+  const frontMatter = generateFrontMatter(issue)
+  const sanitizedTitle = await sanitizeFilenameAsync(issue.title)
   const filePath = `${BLOG_DIR}/${sanitizedTitle}.md`
   const content = frontMatter + (issue.body || '')
 
@@ -344,9 +460,13 @@ const BlogUtils = {
   BLOG_BASE_URL,
   generateFrontMatter,
   sanitizeFilename,
+  sanitizeFilenameAsync,
+  translateText,
   groupIssuesByYearMonth,
   generateReadmeContent,
+  generateReadmeContentAsync,
   createBlogFileContent,
+  createBlogFileContentAsync,
   syncFileToRepo,
   deleteFileFromRepo
 }

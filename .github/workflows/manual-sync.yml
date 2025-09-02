@@ -46,9 +46,9 @@ jobs:
           script: |
             const fs = require('fs');
             const path = require('path');
-            
+
             const BlogUtils = require('./.github/scripts/blog-utils.cjs');
-            
+
             // 清理本地content目录
             // Clear local content directory
             if (fs.existsSync(BlogUtils.BLOG_DIR)) {
@@ -60,7 +60,7 @@ jobs:
                 }
               }
             }
-            
+
             // 清理 nipao.site 仓库的content目录
             // Clear content directory in nipao.site repository
             const targetRepo = { owner: 'jue', repo: 'nipao.site' };
@@ -99,7 +99,7 @@ jobs:
           script: |
             const fs = require('fs');
             const path = require('path');
-            
+
             const BlogUtils = require('./.github/scripts/blog-utils.cjs');
 
             // 确保博客目录存在
@@ -137,9 +137,9 @@ jobs:
                 continue;
               }
               
-              // 使用共享工具函数生成博客文件内容
-              // Use shared utility function to generate blog file content
-              const blogFile = BlogUtils.createBlogFileContent(issue);
+              // 使用共享工具函数生成博客文件内容（异步翻译版本）
+              // Use shared utility function to generate blog file content (async translation version)
+              const blogFile = await BlogUtils.createBlogFileContentAsync(issue);
               const filepath = path.join(BlogUtils.BLOG_DIR, path.basename(blogFile.filePath));
               const content = blogFile.content;
               
@@ -186,9 +186,9 @@ jobs:
             // Group by creation time
             const issuesByYearMonth = BlogUtils.groupIssuesByYearMonth(actualIssues);
 
-            // 生成README内容
-            // Generate README content
-            const readmeContent = BlogUtils.generateReadmeContent(issuesByYearMonth, actualIssues.length);
+            // 生成README内容（异步翻译版本）
+            // Generate README content (async translation version)
+            const readmeContent = await BlogUtils.generateReadmeContentAsync(issuesByYearMonth, actualIssues.length);
 
             // 写入README文件
             // Write README file
