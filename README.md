@@ -6,6 +6,7 @@
 
 ### 2025年九月
 
+- [效率翻倍！Vue 官方 VS Code 插件核心功能全部免费开放](https://www.nipao.com/post/double-the-efficiency)
 - [释放 Nuxt Content 的全部潜力：深入了解查询、导航与搜索](https://www.nipao.com/post/unlock-the-full-potential-of-nuxt-content-in-depth-knowledge-of-query-navigation-and-search)
 
 ### 2025年八月
@@ -26,6 +27,6 @@
 
 💡 **使用说明**：创建新的 Issue 即可自动生成博客文章，文章内容为 Issue 的正文部分。
 
-📊 **统计信息**：共有 6 篇文章
+📊 **统计信息**：共有 7 篇文章
 
-🔄 **最后更新**：2025/9/2 18:39:53
+🔄 **最后更新**：2025/9/15 15:28:00
