@@ -6,7 +6,7 @@ date: 2025-09-16
 lastUpdated: 2025-09-16
 category: 'Share'
 cover: 'https://github.com/user-attachments/assets/7d8ca6cf-a19e-41a5-af24-a938cd789d90'
-wordCount: 1255
+wordCount: 1274
 issue_number: 8
 ---
 **导语：**
@@ -73,12 +73,16 @@ issue_number: 8
 * **方法一（推荐）：在 OpenAI 官网取消**
     * 在 ChatGPT 页面左下角，点击你的用户名 -> "设置" -> "帐户"。
     * 点击 “管理” 出现下拉菜单，找到并点击“取消订阅” 。
+
+<img width="4019" height="2095" alt="Image" src="https://github.com/user-attachments/assets/f7c699ef-f122-4504-8c7e-d7208aa4dabc" />
+
 * **方法二（双重保险）：在 PayPal 里取消**
     * 如果你对 OpenAI 不放心，可以去 PayPal 里取消OpenAI支付。登录 PayPal，访问下面的自动付款管理地址：
         `https://www.paypal.com/myaccount/autopay`
     * 在列表中找到“OpenAI”，点击它，然后选择“停止PayPal支付”或“Stop paying with PayPal”，这样就彻底切断了自动扣款的授权。
 
-<img width="4019" height="2095" alt="Image" src="https://github.com/user-attachments/assets/f7c699ef-f122-4504-8c7e-d7208aa4dabc" />
+<img width="4019" height="2095" alt="Image" src="https://github.com/user-attachments/assets/d85aa45b-2ea7-452d-b21f-0cb599b900af" />
+
 
 ---
 
