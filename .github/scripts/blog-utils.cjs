@@ -115,13 +115,12 @@ function generateFrontMatter(issue) {
   let wordCount = 0
   if (body) {
     const chineseChars = (body.match(/[\u4e00-\u9fff]/g) || []).length
-    const englishWords = body.replace(/[\u4e00-\u9fff]/g, '').match(/\b\w+\b/g) || []
+    const englishWords =
+      body.replace(/[\u4e00-\u9fff]/g, '').match(/\b\w+\b/g) || []
     wordCount = chineseChars + englishWords.length
   }
 
-  const readingTime = wordCount
-    ? Math.max(1, Math.round(wordCount / 300))
-    : 0
+  const readingTime = wordCount ? Math.max(1, Math.round(wordCount / 300)) : 0
 
   const frontMatterLines = [
     '---',
@@ -396,6 +395,27 @@ function generateReadmeContent(issuesByYearMonth, totalCount) {
 }
 
 /**
+ * 转义Vue模板语法以避免VitePress构建错误
+ * Escape Vue template syntax to prevent VitePress build errors
+ * @param {string} content - 原始内容
+ * @returns {string} - 转义后的内容
+ */
+function escapeVueTemplateSyntax(content) {
+  if (!content) return content
+
+  // 转义 {{ }} 为 { } }
+  // 使用负向前瞻和负向后顾确保不会重复转义已经转义的内容
+  return content.replace(/\{\{([^{]*?)\}\}/g, (match, p1) => {
+    // 如果已经是转义格式，则不处理
+    if (match.includes('{ {') || match.includes('} }')) {
+      return match
+    }
+    // 将 {{ ... }} 转义为 { { ... }
+    return `{ {${p1}} }`
+  })
+}
+
+/**
  * 创建博客文件内容
  * Create blog file content
  * @param {Object} issue - GitHub issue 对象
@@ -405,7 +425,12 @@ function createBlogFileContent(issue) {
   const frontMatter = generateFrontMatter(issue)
   const sanitizedTitle = sanitizeFilename(issue.title)
   const filePath = `${BLOG_DIR}/${sanitizedTitle}.md`
-  const content = frontMatter + (issue.body || '')
+
+  // 转义Vue模板语法以避免VitePress构建错误
+  let bodyContent = issue.body || ''
+  bodyContent = escapeVueTemplateSyntax(bodyContent)
+
+  const content = frontMatter + bodyContent
 
   return {
     filePath,
@@ -424,7 +449,12 @@ async function createBlogFileContentAsync(issue) {
   const frontMatter = generateFrontMatter(issue)
   const sanitizedTitle = await sanitizeFilenameAsync(issue.title)
   const filePath = `${BLOG_DIR}/${sanitizedTitle}.md`
-  const content = frontMatter + (issue.body || '')
+
+  // 转义Vue模板语法以避免VitePress构建错误
+  let bodyContent = issue.body || ''
+  bodyContent = escapeVueTemplateSyntax(bodyContent)
+
+  const content = frontMatter + bodyContent
 
   return {
     filePath,
@@ -466,7 +496,9 @@ async function syncFileToRepo(
       const fileContent = Buffer.from(fileData.content, 'base64').toString(
         'utf8'
       )
-      const match = fileContent.match(/(?:^|\n)(?:githubIssue|issue_number):\s*(\d+)/)
+      const match = fileContent.match(
+        /(?:^|\n)(?:githubIssue|issue_number):\s*(\d+)/
+      )
       if (match && parseInt(match[1], 10) === parseInt(issueNumber, 10)) {
         existingFileSha = fileData.sha
         console.log(
@@ -535,7 +567,9 @@ async function deleteFileFromRepo(
 
     // 验证文件确实对应当前issue
     const fileContent = Buffer.from(fileData.content, 'base64').toString('utf8')
-    const match = fileContent.match(/(?:^|\n)(?:githubIssue|issue_number):\s*(\d+)/)
+    const match = fileContent.match(
+      /(?:^|\n)(?:githubIssue|issue_number):\s*(\d+)/
+    )
     if (match && parseInt(match[1], 10) === parseInt(issueNumber, 10)) {
       // 删除文件
       await github.rest.repos.deleteFile({
@@ -588,7 +622,8 @@ const BlogUtils = {
   createBlogFileContent,
   createBlogFileContentAsync,
   syncFileToRepo,
-  deleteFileFromRepo
+  deleteFileFromRepo,
+  escapeVueTemplateSyntax
 }
 
 // 兼容不同的模块系统
