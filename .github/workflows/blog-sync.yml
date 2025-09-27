@@ -74,7 +74,7 @@ jobs:
               // 验证文件确实对应当前issue
               // Verify the file actually corresponds to the current issue
               const fileContent = Buffer.from(fileData.content, 'base64').toString('utf8');
-              const match = fileContent.match(/issue_number:\s*(\d+)/);
+              const match = fileContent.match(/(?:^|\n)(?:githubIssue|issue_number):\s*(\d+)/);
               
               if (match && parseInt(match[1], 10) === issueNumber) {
                 // 删除本地文件
@@ -160,7 +160,7 @@ jobs:
               // 验证文件确实对应当前issue
               // Verify the file actually corresponds to the current issue
               const existingContent = Buffer.from(fileData.content, 'base64').toString('utf8');
-              const match = existingContent.match(/issue_number:\s*(\d+)/);
+              const match = existingContent.match(/(?:^|\n)(?:githubIssue|issue_number):\s*(\d+)/);
               if (match && parseInt(match[1], 10) === issueNumber) {
                 existingFileSha = fileData.sha;
                 console.log(`Found existing file: ${filePath}`);

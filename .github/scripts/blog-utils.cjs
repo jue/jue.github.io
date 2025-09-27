@@ -44,6 +44,21 @@ function extractFirstImageUrl(content) {
 }
 
 /**
+ * 将字符串转为安全的 YAML 双引号格式
+ * Quote string for YAML double quoted style
+ * @param {string} value
+ * @returns {string}
+ */
+function yamlQuote(value) {
+  const stringValue = String(value ?? '')
+  const escaped = stringValue
+    .replace(/\\/g, '\\\\')
+    .replace(/"/g, '\\"')
+    .replace(/\n/g, '\\n')
+  return `"${escaped}"`
+}
+
+/**
  * 生成 Front Matter
  * Generate Front Matter
  * @param {Object} issue - GitHub issue 对象
@@ -51,92 +66,114 @@ function extractFirstImageUrl(content) {
  */
 function generateFrontMatter(issue) {
   const title = issue.title
-  const author = issue.user.login
+  const authorLogin = issue.user.login
+  const authorLink = issue.user.html_url || `https://github.com/${authorLogin}`
+  const authorAvatar = issue.user.avatar_url || ''
   const createdAt = issue.created_at.split('T')[0]
   const updatedAt = issue.updated_at.split('T')[0]
   const issueNumber = issue.number
 
   // 分离分类和标签
   // Separate categories and tags
-  let category = 'other' // 默认分类
+  let category = null
   const tags = []
 
   issue.labels.forEach((label) => {
     if (label.name.startsWith('Category:')) {
-      // 移除 'Category:' 前缀作为分类
-      // Remove 'Category:' prefix for categories
       const categoryName = label.name.replace(/^Category:\s*/, '').trim()
       if (categoryName) {
         category = categoryName
       }
-    } else {
-      // other标签作为 tags
-      // Other labels as tags
+    } else if (label.name) {
       tags.push(label.name)
     }
   })
 
+  const categories = category ? [category] : []
+
   // 生成文章描述（取issue body的前150个字符）
   // Generate description (first 150 characters of issue body)
   let description = ''
-  if (issue.body) {
-    description = issue.body
-      .replace(/[#*`\[\]]/g, '') // 移除markdown标记
-      .replace(/\n+/g, ' ') // 换行转空格
+  const body = issue.body || ''
+  if (body) {
+    description = body
+      .replace(/[#*`\[\]]/g, '')
+      .replace(/\n+/g, ' ')
       .trim()
       .substring(0, 150)
-    if (issue.body.length > 150) {
+    if (body.length > 150) {
       description += '...'
     }
   }
 
   // 提取第一张图片作为封面
   // Extract first image as cover
-  const cover = extractFirstImageUrl(issue.body || '')
+  const cover = extractFirstImageUrl(body)
 
   // 估算字数（中文按字符计算，英文按单词计算）
   // Estimate word count
   let wordCount = 0
-  if (issue.body) {
-    const chineseChars = (issue.body.match(/[\u4e00-\u9fff]/g) || []).length
-    const englishWords =
-      issue.body.replace(/[\u4e00-\u9fff]/g, '').match(/\b\w+\b/g) || []
+  if (body) {
+    const chineseChars = (body.match(/[\u4e00-\u9fff]/g) || []).length
+    const englishWords = body.replace(/[\u4e00-\u9fff]/g, '').match(/\b\w+\b/g) || []
     wordCount = chineseChars + englishWords.length
   }
 
+  const readingTime = wordCount
+    ? Math.max(1, Math.round(wordCount / 300))
+    : 0
+
   const frontMatterLines = [
     '---',
-    `title: '${title.replace(/'/g, "'")}'`,
-    `description: '${description.replace(/'/g, "'")}'`,
-    `author: '${author}'`,
+    `title: ${yamlQuote(title)}`,
+    `description: ${yamlQuote(description)}`,
     `date: ${createdAt}`,
     `lastUpdated: ${updatedAt}`,
-    `category: '${category.replace(/'/g, "'")}'`
+    'authors:',
+    `  - name: ${yamlQuote(authorLogin)}`,
+    `    link: ${yamlQuote(authorLink)}`
   ]
 
-  // 添加封面图片（如果有）
-  // Add cover image (if any)
-  if (cover) {
-    frontMatterLines.push(`cover: '${cover.replace(/'/g, "'")}'`)
+  if (authorAvatar) {
+    frontMatterLines.push(`    avatar: ${yamlQuote(authorAvatar)}`)
   }
 
-  // 添加标签（如果有）
-  // Add tags (if any)
-  if (tags.length > 0) {
-    frontMatterLines.push('tags:')
-    tags.forEach((tag) => {
-      frontMatterLines.push(`  - '${tag.replace(/'/g, "'")}'`)
+  if (cover) {
+    frontMatterLines.push(`cover: ${yamlQuote(cover)}`)
+  }
+
+  if (categories.length > 0) {
+    frontMatterLines.push('categories:')
+    categories.forEach((item) => {
+      frontMatterLines.push(`  - ${yamlQuote(item)}`)
     })
   }
 
-  // 添加字数和issue编号
-  // Add word count and issue number
-  frontMatterLines.push(
-    `wordCount: ${wordCount}`,
-    `issue_number: ${issueNumber}`,
-    '---',
-    ''
-  )
+  if (tags.length > 0) {
+    frontMatterLines.push('tags:')
+    tags.forEach((tag) => {
+      frontMatterLines.push(`  - ${yamlQuote(tag)}`)
+    })
+  }
+
+  if (wordCount > 0) {
+    frontMatterLines.push(`wordCount: ${wordCount}`)
+  }
+
+  if (readingTime > 0) {
+    frontMatterLines.push(`readingTime: ${readingTime}`)
+  }
+
+  frontMatterLines.push(`githubIssue: ${issueNumber}`)
+  if (issue.html_url) {
+    frontMatterLines.push(`githubUrl: ${yamlQuote(issue.html_url)}`)
+  }
+
+  if (issue.state && issue.state !== 'open') {
+    frontMatterLines.push(`draft: true`)
+  }
+
+  frontMatterLines.push('---', '')
 
   return frontMatterLines.join('\n')
 }
@@ -429,7 +466,7 @@ async function syncFileToRepo(
       const fileContent = Buffer.from(fileData.content, 'base64').toString(
         'utf8'
       )
-      const match = fileContent.match(/issue_number:\s*(\d+)/)
+      const match = fileContent.match(/(?:^|\n)(?:githubIssue|issue_number):\s*(\d+)/)
       if (match && parseInt(match[1], 10) === parseInt(issueNumber, 10)) {
         existingFileSha = fileData.sha
         console.log(
@@ -498,7 +535,7 @@ async function deleteFileFromRepo(
 
     // 验证文件确实对应当前issue
     const fileContent = Buffer.from(fileData.content, 'base64').toString('utf8')
-    const match = fileContent.match(/issue_number:\s*(\d+)/)
+    const match = fileContent.match(/(?:^|\n)(?:githubIssue|issue_number):\s*(\d+)/)
     if (match && parseInt(match[1], 10) === parseInt(issueNumber, 10)) {
       // 删除文件
       await github.rest.repos.deleteFile({

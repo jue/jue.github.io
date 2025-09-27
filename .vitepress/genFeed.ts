@@ -3,6 +3,12 @@ import { writeFileSync } from 'fs'
 import { Feed } from 'feed'
 import { createContentLoader, type SiteConfig } from 'vitepress'
 
+type FrontmatterAuthor = {
+  name?: string
+  link?: string
+  twitter?: string
+}
+
 const baseUrl = `https://blog.nipao.com`
 
 export async function genFeed(config: SiteConfig) {
@@ -30,21 +36,39 @@ export async function genFeed(config: SiteConfig) {
   )
 
   for (const { url, excerpt, frontmatter, html } of posts) {
+    const authorEntries: FrontmatterAuthor[] = Array.isArray(frontmatter.authors)
+      ? (frontmatter.authors as FrontmatterAuthor[])
+      : frontmatter.author
+        ? [
+            {
+              name: frontmatter.author,
+              link: frontmatter.twitter
+                ? `https://twitter.com/${frontmatter.twitter}`
+                : undefined
+            }
+          ]
+        : []
+
+    const normalizedAuthors = authorEntries
+      .map((author) => ({
+        name: author.name,
+        link: author.link ||
+          (author.twitter ? `https://twitter.com/${author.twitter}` : undefined)
+      }))
+      .filter((author) => author.name)
+
+    const publishedAt = frontmatter.date instanceof Date
+      ? frontmatter.date
+      : new Date(frontmatter.date)
+
     feed.addItem({
       title: frontmatter.title,
       id: `${baseUrl}${url}`,
       link: `${baseUrl}${url}`,
       description: excerpt,
       content: html?.replaceAll('&ZeroWidthSpace;', ''),
-      author: [
-        {
-          name: frontmatter.author,
-          link: frontmatter.twitter
-            ? `https://twitter.com/${frontmatter.twitter}`
-            : undefined
-        }
-      ],
-      date: frontmatter.date
+      author: normalizedAuthors.length ? normalizedAuthors : undefined,
+      date: publishedAt
     })
   }
 
