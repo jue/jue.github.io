@@ -21,14 +21,20 @@ export default createContentLoader('post/*.md', {
         title: frontmatter.title,
         url,
         excerpt,
-        date: formatDate(frontmatter.date)
+        date: formatDate(frontmatter.date || new Date())
       }))
       .sort((a, b) => b.date.time - a.date.time)
   }
 })
 
-function formatDate(raw: string): Post['date'] {
-  const date = new Date(raw)
+function formatDate(raw: string | Date | undefined): Post['date'] {
+  // 如果 raw 是 undefined 或无效日期，使用当前日期
+  const date = new Date(raw || new Date())
+  // 检查日期是否有效
+  if (isNaN(date.getTime())) {
+    // 如果日期无效，使用当前日期
+    date.setTime(new Date().getTime())
+  }
   date.setUTCHours(12)
   return {
     time: +date,
