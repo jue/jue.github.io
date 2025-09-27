@@ -9,14 +9,47 @@ const { frontmatter: data } = useData()
 
 const route = useRoute()
 
-function findCurrentIndex() {
-  return posts.findIndex((p) => p.url === route.path)
+function normalize(path: string) {
+  return path.replace(/(index)?\.html$/, '').replace(/\/$/, '')
+}
+
+const currentIndex = computed(() => {
+  const normalizedRoute = normalize(route.path)
+  return posts.findIndex((p) => normalize(p.url) === normalizedRoute)
+})
+
+const currentPost = computed(() => {
+  const index = currentIndex.value
+  return index >= 0 ? posts[index] : undefined
+})
+
+function fallbackDate() {
+  const raw = data.value?.date
+  const parsed = new globalThis.Date(raw || globalThis.Date.now())
+  if (Number.isNaN(parsed.getTime())) {
+    parsed.setTime(globalThis.Date.now())
+  }
+  parsed.setUTCHours(12)
+  return {
+    time: +parsed,
+    string: parsed.toLocaleDateString('zh-CN', {
+      year: 'numeric',
+      month: 'long',
+      day: 'numeric'
+    })
+  }
 }
 
 // use the customData date which contains pre-resolved date info
-const date = computed(() => posts[findCurrentIndex()].date)
-const nextPost = computed(() => posts[findCurrentIndex() - 1])
-const prevPost = computed(() => posts[findCurrentIndex() + 1])
+const date = computed(() => currentPost.value?.date ?? fallbackDate())
+const nextPost = computed(() => {
+  const index = currentIndex.value
+  return index > 0 ? posts[index - 1] : undefined
+})
+const prevPost = computed(() => {
+  const index = currentIndex.value
+  return index >= 0 && index + 1 < posts.length ? posts[index + 1] : undefined
+})
 </script>
 
 <template>
