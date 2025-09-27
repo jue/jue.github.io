@@ -416,6 +416,19 @@ function escapeVueTemplateSyntax(content) {
 }
 
 /**
+ * 替换内容中的 GitHub 图片地址为 CDN 地址
+ * Replace GitHub image URLs with CDN URLs in content
+ * @param {string} content - 原始内容
+ * @returns {string} - 替换后的内容
+ */
+function replaceGithubImageCdn(content) {
+  if (!content) return content
+
+  // 匹配 https://github.com/... 中的 github.com 并替换为 github-cdn.nipao.com
+  return content.replace(/(https:\/\/)github\.com/g, '$1github-cdn.nipao.com')
+}
+
+/**
  * 创建博客文件内容
  * Create blog file content
  * @param {Object} issue - GitHub issue 对象
@@ -429,6 +442,8 @@ function createBlogFileContent(issue) {
   // 转义Vue模板语法以避免VitePress构建错误
   let bodyContent = issue.body || ''
   bodyContent = escapeVueTemplateSyntax(bodyContent)
+  // 替换GitHub图片地址为CDN地址
+  bodyContent = replaceGithubImageCdn(bodyContent)
 
   const content = frontMatter + bodyContent
 
@@ -453,6 +468,8 @@ async function createBlogFileContentAsync(issue) {
   // 转义Vue模板语法以避免VitePress构建错误
   let bodyContent = issue.body || ''
   bodyContent = escapeVueTemplateSyntax(bodyContent)
+  // 替换GitHub图片地址为CDN地址
+  bodyContent = replaceGithubImageCdn(bodyContent)
 
   const content = frontMatter + bodyContent
 
@@ -623,7 +640,8 @@ const BlogUtils = {
   createBlogFileContentAsync,
   syncFileToRepo,
   deleteFileFromRepo,
-  escapeVueTemplateSyntax
+  escapeVueTemplateSyntax,
+  replaceGithubImageCdn
 }
 
 // 兼容不同的模块系统
