@@ -13,7 +13,7 @@ export default defineConfig({
       'meta',
       {
         name: 'twitter:image',
-        content: 'https://www.nipao.com/images/logo.svg'
+        content: 'https://blog.nipao.com/images/logo.svg'
       }
     ],
     [
