@@ -1,0 +1,209 @@
+# .github/workflows/manual-sync.yml
+
+name: Manual Issues Sync
+
+# 手动触发工作流
+# Manual trigger workflow
+on:
+  workflow_dispatch:
+    inputs:
+      clear_docs:
+        description: 'Clear all existing docs before sync'
+        required: false
+        default: true
+        type: boolean
+
+jobs:
+  sync-issues:
+    runs-on: ubuntu-latest
+
+    # 赋予脚本读写权限
+    # Grant read and write permissions to the script
+    permissions:
+      contents: write
+      issues: read
+
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+        with:
+          token: ${{ secrets.TOKEN }}
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '18'
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Clear Existing Docs (Optional)
+        if: ${{ github.event.inputs.clear_docs == 'true' }}
+        uses: actions/github-script@v7
+        with:
+          github-token: ${{ secrets.TOKEN }}
+          script: |
+            const fs = require('fs');
+            const path = require('path');
+
+            const BlogUtils = require('./.github/scripts/blog-utils.cjs');
+
+            // 清理本地content目录
+            // Clear local content directory
+            if (fs.existsSync(BlogUtils.BLOG_DIR)) {
+              const files = fs.readdirSync(BlogUtils.BLOG_DIR);
+              for (const file of files) {
+                if (file.endsWith('.md')) {
+                  fs.unlinkSync(path.join(BlogUtils.BLOG_DIR, file));
+                  console.log(`Deleted local file: ${file}`);
+                }
+              }
+            }
+
+            // 清理 nipao.site 仓库的content目录
+            // Clear content directory in nipao.site repository
+            const targetRepo = { owner: 'jue', repo: 'nipao.site' };
+            try {
+              const { data: files } = await github.rest.repos.getContent({
+                owner: targetRepo.owner,
+                repo: targetRepo.repo,
+                path: BlogUtils.BLOG_DIR
+              });
+              
+              for (const file of files) {
+                if (file.name.endsWith('.md')) {
+                  await github.rest.repos.deleteFile({
+                    owner: targetRepo.owner,
+                    repo: targetRepo.repo,
+                    path: file.path,
+                    message: `Manual sync: Clear existing docs - Delete ${file.name}`,
+                    sha: file.sha,
+                    committer: { name: 'GitHub Actions Bot', email: 'actions@github.com' }
+                  });
+                  console.log(`Deleted from ${targetRepo.owner}/${targetRepo.repo}: ${file.name}`);
+                }
+              }
+            } catch (error) {
+              if (error.status === 404) {
+                console.log(`Content directory not found in ${targetRepo.owner}/${targetRepo.repo}`);
+              } else {
+                console.error(`Error clearing ${targetRepo.owner}/${targetRepo.repo}:`, error.message);
+              }
+            }
+
+      - name: Sync Open Issues to Docs
+        uses: actions/github-script@v7
+        with:
+          github-token: ${{ secrets.TOKEN }}
+          script: |
+            const fs = require('fs');
+            const path = require('path');
+
+            const BlogUtils = require('./.github/scripts/blog-utils.cjs');
+
+            // 确保博客目录存在
+            // Ensure blog directory exists
+            if (!fs.existsSync(BlogUtils.BLOG_DIR)) {
+              fs.mkdirSync(BlogUtils.BLOG_DIR, { recursive: true });
+            }
+
+            // 获取仓库所有者
+            // Get repository owner
+            const owner = context.repo.owner;
+
+            // 获取所有open状态的issues
+            // Get all open issues
+            const issues = await github.rest.issues.listForRepo({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              state: 'open',
+              creator: owner,
+              per_page: 100
+            });
+
+            console.log(`Found ${issues.data.length} open issues`);
+
+            // 目标仓库配置
+            // Target repository configuration
+            const targetRepo = { owner: 'jue', repo: 'nipao.site' };
+
+            // 为每个issue创建markdown文件
+            // Create markdown file for each issue
+            for (const issue of issues.data) {
+              // 跳过pull requests
+              // Skip pull requests
+              if (issue.pull_request) {
+                continue;
+              }
+              
+              // 使用共享工具函数生成博客文件内容（异步翻译版本）
+              // Use shared utility function to generate blog file content (async translation version)
+              const blogFile = await BlogUtils.createBlogFileContentAsync(issue);
+              const filepath = path.join(BlogUtils.BLOG_DIR, path.basename(blogFile.filePath));
+              const content = blogFile.content;
+              
+              // 写入本地文件
+              // Write local file
+              fs.writeFileSync(filepath, content, 'utf8');
+              console.log(`Created: ${path.basename(filepath)}`);
+              
+              // 同步到 nipao.site 仓库
+              // Sync to nipao.site repository
+              const syncMessage = `Manual sync: Create blog ${issue.title}`;
+              await BlogUtils.syncFileToRepo(github, targetRepo, blogFile.filePath, content, syncMessage, issue.number);
+            }
+
+      - name: Update README Issue List
+        uses: actions/github-script@v7
+        with:
+          github-token: ${{ secrets.TOKEN }}
+          script: |
+            const fs = require('fs');
+            const path = require('path');
+
+            const BlogUtils = require('./.github/scripts/blog-utils.cjs');
+
+            // 获取仓库所有者
+            // Get repository owner
+            const owner = context.repo.owner;
+
+            // 获取所有open状态的issues
+            // Get all open issues
+            const issues = await github.rest.issues.listForRepo({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              state: 'open',
+              creator: owner,
+              per_page: 100
+            });
+
+            // 过滤掉pull requests
+            // Filter out pull requests
+            const actualIssues = issues.data.filter(issue => !issue.pull_request);
+
+            // 按创建时间分组
+            // Group by creation time
+            const issuesByYearMonth = BlogUtils.groupIssuesByYearMonth(actualIssues);
+
+            // 生成README内容（异步翻译版本）
+            // Generate README content (async translation version)
+            const readmeContent = await BlogUtils.generateReadmeContentAsync(issuesByYearMonth, actualIssues.length);
+
+            // 写入README文件
+            // Write README file
+            fs.writeFileSync('README.md', readmeContent, 'utf8');
+            console.log('README.md updated successfully');
+
+      - name: Commit and Push Changes
+        run: |
+          git config --local user.email "i@xiangjianfeng.com"
+          git config --local user.name "xiangjianfeng"
+          git add .
+          if git diff --staged --quiet; then
+            echo "No changes to commit"
+          else
+            git commit -m "Manual sync: Update blog posts and README from open issues"
+            git push
+            echo "Changes committed and pushed"
+          fi

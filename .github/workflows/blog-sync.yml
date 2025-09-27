@@ -1,0 +1,263 @@
+# .github/workflows/blog-sync.yml
+
+name: Blog Sync with Issues
+
+# 触发条件：监听 issues 的状态变化
+# Trigger conditions: Listen for issue state changes
+on:
+  issues:
+    types: [opened, edited, closed, reopened, labeled, unlabeled]
+
+jobs:
+  sync-blog-post:
+    runs-on: ubuntu-latest
+
+    # 赋予脚本读写权限
+    # Grant read and write permissions to the script
+    permissions:
+      contents: write
+      issues: write
+
+    steps:
+      # 步骤一：检出仓库代码
+      # Step 1: Check out the repository code
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+
+      # 步骤二：设置Node.js环境
+      # Step 2: Setup Node.js environment
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '18'
+          cache: 'npm'
+
+      # 步骤三：安装依赖
+      # Step 3: Install dependencies
+      - name: Install Dependencies
+        run: npm ci
+
+      # 步骤四：处理 Issue 关闭事件（删除文章）
+      # Step 4: Handle Issue close event (delete article)
+      - name: Handle Closed Issue (Delete Post)
+        if: github.event.action == 'closed'
+        uses: actions/github-script@v7
+        with:
+          github-token: ${{ secrets.TOKEN }}
+          script: |
+            const BlogUtils = require('./.github/scripts/blog-utils.cjs');
+
+            const issue = context.payload.issue;
+            const issueNumber = issue.number;
+            const repoInfo = { owner: context.repo.owner, repo: context.repo.repo };
+
+            // 权限检查：只有仓库创建者可以删除博文
+            // Permission check: Only repository owner can delete blog posts
+            if (issue.user.login !== context.repo.owner) {
+              console.log(`Issue #${issueNumber} was created by ${issue.user.login}, not the repository owner. Skipping deletion.`);
+              return;
+            }
+
+            // 计算文件路径
+            // Calculate file path
+            const sanitizedTitle = BlogUtils.sanitizeFilename(issue.title);
+            const targetFilePath = `${BlogUtils.BLOG_DIR}/${sanitizedTitle}.md`;
+
+            // 尝试删除文件
+            // Try to delete the file
+            try {
+              const { data: fileData } = await github.rest.repos.getContent({
+                ...repoInfo,
+                path: targetFilePath,
+              });
+
+              // 验证文件确实对应当前issue
+              // Verify the file actually corresponds to the current issue
+              const fileContent = Buffer.from(fileData.content, 'base64').toString('utf8');
+              const match = fileContent.match(/issue_number:\s*(\d+)/);
+              
+              if (match && parseInt(match[1], 10) === issueNumber) {
+                // 删除本地文件
+                // Delete local file
+                await github.rest.repos.deleteFile({
+                  ...repoInfo,
+                  path: targetFilePath,
+                  message: `Delete blog: Closed issue #${issueNumber}`,
+                  sha: fileData.sha,
+                  committer: { name: 'GitHub Actions Bot', email: 'actions@github.com' }
+                });
+                console.log(`Successfully deleted ${targetFilePath}`);
+                
+                // 同步删除到 nipao.site 仓库
+                // Sync deletion to nipao.site repository
+                const targetRepo = { owner: 'jue', repo: 'nipao.site' };
+                await BlogUtils.deleteFileFromRepo(github, targetRepo, targetFilePath, `Delete blog: Closed issue #${issueNumber}`, issueNumber);
+                
+                // 添加评论告知已删除
+                // Add a comment to notify of deletion
+                await github.rest.issues.createComment({
+                  ...repoInfo,
+                  issue_number: issueNumber,
+                  body: `🗑️ 博客文章已根据 Issue 关闭状态自动删除，并同步到 nipao.site 仓库。`
+                });
+              } else {
+                console.log(`File ${targetFilePath} exists but doesn't match issue #${issueNumber}.`);
+              }
+            } catch (error) {
+              if (error.status === 404) {
+                console.log(`No blog file found for issue #${issueNumber} at ${targetFilePath}.`);
+              } else {
+                console.error(`Error accessing file ${targetFilePath}:`, error.message);
+              }
+            }
+
+      # 步骤五：处理 Issue 打开、编辑、重开、标签事件（创建或更新文章）
+      # Step 5: Handle Issue open, edit, reopen, label events (create or update article)
+      - name: Handle Other Events (Create/Update Post)
+        if: github.event.action != 'closed'
+        uses: actions/github-script@v7
+        with:
+          github-token: ${{ secrets.TOKEN }}
+          script: |
+            const BlogUtils = require('./.github/scripts/blog-utils.cjs');
+
+            const issue = context.payload.issue;
+            const issueNumber = issue.number;
+            const repoInfo = { owner: context.repo.owner, repo: context.repo.repo };
+
+            // 权限检查：只有仓库创建者可以创建/更新博文
+            // Permission check: Only repository owner can create/update blog posts
+            if (issue.user.login !== context.repo.owner) {
+              console.log(`Issue #${issueNumber} was created by ${issue.user.login}, not the repository owner. Skipping blog post creation/update.`);
+              
+              // 为非创建者的issue添加说明评论
+              // Add explanatory comment for non-owner issues
+              if (context.payload.action === 'opened') {
+                await github.rest.issues.createComment({
+                  ...repoInfo,
+                  issue_number: issueNumber,
+                  body: `📝 感谢您的Issue！但为了维护博客内容质量，只有仓库创建者发布的Issue才会自动转换为博客文章。您的Issue仍然有效，我们会及时处理。`
+                });
+              }
+              return;
+            }
+
+            // 生成博客文件内容（异步翻译版本）
+            // Generate blog file content (async translation version)
+            const blogFile = await BlogUtils.createBlogFileContentAsync(issue);
+            const filePath = blogFile.filePath;
+            const fileContent = blogFile.content;
+
+            // 检查文件是否已存在
+            // Check if file already exists
+            let existingFileSha = null;
+            try {
+              const { data: fileData } = await github.rest.repos.getContent({
+                ...repoInfo,
+                path: filePath,
+              });
+              
+              // 验证文件确实对应当前issue
+              // Verify the file actually corresponds to the current issue
+              const existingContent = Buffer.from(fileData.content, 'base64').toString('utf8');
+              const match = existingContent.match(/issue_number:\s*(\d+)/);
+              if (match && parseInt(match[1], 10) === issueNumber) {
+                existingFileSha = fileData.sha;
+                console.log(`Found existing file: ${filePath}`);
+              }
+            } catch (error) {
+              if (error.status !== 404) {
+                console.error(`Error checking file ${filePath}:`, error.message);
+              }
+              // 文件不存在，将创建新文件
+              // File doesn't exist, will create new file
+            }
+
+            // 创建或更新文件
+            // Create or update the file
+            const message = existingFileSha ? `Update blog: ${issue.title}` : `Create blog: ${issue.title}`;
+            await github.rest.repos.createOrUpdateFileContents({
+              ...repoInfo,
+              path: filePath,
+              message: message,
+              content: Buffer.from(fileContent).toString('base64'),
+              sha: existingFileSha,
+              committer: { name: 'GitHub Actions Bot', email: 'actions@github.com' },
+              author: { name: issue.user.login, email: `${issue.user.login}@users.noreply.github.com` }
+            });
+
+            console.log(`Successfully processed ${filePath}`);
+
+            // 同步到 nipao.site 仓库
+            // Sync to nipao.site repository
+            const targetRepo = { owner: 'jue', repo: 'nipao.site' };
+            const syncMessage = existingFileSha ? `Update blog: ${issue.title}` : `Create blog: ${issue.title}`;
+            await BlogUtils.syncFileToRepo(github, targetRepo, filePath, fileContent, syncMessage, issueNumber);
+
+      # 步骤六：更新 README.md 中的 Issue 列表
+      # Step 6: Update Issue list in README.md
+      - name: Update README Issue List
+        uses: actions/github-script@v7
+        with:
+          github-token: ${{ secrets.TOKEN }}
+          script: |
+            const BlogUtils = require('./.github/scripts/blog-utils.cjs');
+
+            const repoInfo = { owner: context.repo.owner, repo: context.repo.repo };
+
+            try {
+              // 获取所有 issues（只获取仓库创建者创建的）
+              // Get all issues (only those created by repository owner)
+              const { data: issues } = await github.rest.issues.listForRepo({
+                ...repoInfo,
+                state: 'all',
+                creator: context.repo.owner,
+                per_page: 100,
+                sort: 'created',
+                direction: 'desc'
+              });
+
+              // 过滤并分组 issues
+              // Filter and group issues
+              const openIssues = issues.filter(issue => !issue.pull_request && issue.state === 'open');
+              const issuesByYearMonth = BlogUtils.groupIssuesByYearMonth(openIssues);
+
+              // 生成 README 内容（异步翻译版本）
+              // Generate README content (async translation version)
+              const readmeContent = await BlogUtils.generateReadmeContentAsync(issuesByYearMonth, openIssues.length);
+
+              // 获取当前 README.md 文件（如果存在）
+              // Get current README.md file (if exists)
+              let currentReadmeSha = null;
+              try {
+                const { data: readmeData } = await github.rest.repos.getContent({
+                  ...repoInfo,
+                  path: 'README.md'
+                });
+                currentReadmeSha = readmeData.sha;
+              } catch (error) {
+                if (error.status !== 404) {
+                  console.error('Error getting README.md:', error.message);
+                }
+                // 文件不存在，将创建新文件
+                // File doesn't exist, will create new file
+              }
+
+              // 创建或更新 README.md
+              // Create or update README.md
+              await github.rest.repos.createOrUpdateFileContents({
+                ...repoInfo,
+                path: 'README.md',
+                message: 'Update README.md with latest issue list',
+                content: Buffer.from(readmeContent).toString('base64'),
+                sha: currentReadmeSha,
+                committer: { name: 'GitHub Actions Bot', email: 'actions@github.com' }
+              });
+
+              console.log('Successfully updated README.md with issue list');
+              
+            } catch (error) {
+              console.error('Error updating README.md:', error.message);
+              // 不要让这个错误阻止整个工作流
+              // Don't let this error block the entire workflow
+            }
