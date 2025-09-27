@@ -32,7 +32,7 @@ jobs:
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: '18'
+          node-version: '22'
           cache: 'npm'
 
       - name: Install dependencies
@@ -58,37 +58,6 @@ jobs:
                   fs.unlinkSync(path.join(BlogUtils.BLOG_DIR, file));
                   console.log(`Deleted local file: ${file}`);
                 }
-              }
-            }
-
-            // 清理 nipao.site 仓库的content目录
-            // Clear content directory in nipao.site repository
-            const targetRepo = { owner: 'jue', repo: 'nipao.site' };
-            try {
-              const { data: files } = await github.rest.repos.getContent({
-                owner: targetRepo.owner,
-                repo: targetRepo.repo,
-                path: BlogUtils.BLOG_DIR
-              });
-              
-              for (const file of files) {
-                if (file.name.endsWith('.md')) {
-                  await github.rest.repos.deleteFile({
-                    owner: targetRepo.owner,
-                    repo: targetRepo.repo,
-                    path: file.path,
-                    message: `Manual sync: Clear existing docs - Delete ${file.name}`,
-                    sha: file.sha,
-                    committer: { name: 'GitHub Actions Bot', email: 'actions@github.com' }
-                  });
-                  console.log(`Deleted from ${targetRepo.owner}/${targetRepo.repo}: ${file.name}`);
-                }
-              }
-            } catch (error) {
-              if (error.status === 404) {
-                console.log(`Content directory not found in ${targetRepo.owner}/${targetRepo.repo}`);
-              } else {
-                console.error(`Error clearing ${targetRepo.owner}/${targetRepo.repo}:`, error.message);
               }
             }
 
@@ -124,10 +93,6 @@ jobs:
 
             console.log(`Found ${issues.data.length} open issues`);
 
-            // 目标仓库配置
-            // Target repository configuration
-            const targetRepo = { owner: 'jue', repo: 'nipao.site' };
-
             // 为每个issue创建markdown文件
             // Create markdown file for each issue
             for (const issue of issues.data) {
@@ -147,11 +112,6 @@ jobs:
               // Write local file
               fs.writeFileSync(filepath, content, 'utf8');
               console.log(`Created: ${path.basename(filepath)}`);
-              
-              // 同步到 nipao.site 仓库
-              // Sync to nipao.site repository
-              const syncMessage = `Manual sync: Create blog ${issue.title}`;
-              await BlogUtils.syncFileToRepo(github, targetRepo, blogFile.filePath, content, syncMessage, issue.number);
             }
 
       - name: Update README Issue List

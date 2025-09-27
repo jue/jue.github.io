@@ -29,7 +29,7 @@ jobs:
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: '18'
+          node-version: '22'
           cache: 'npm'
 
       # 步骤三：安装依赖
@@ -88,17 +88,12 @@ jobs:
                 });
                 console.log(`Successfully deleted ${targetFilePath}`);
                 
-                // 同步删除到 nipao.site 仓库
-                // Sync deletion to nipao.site repository
-                const targetRepo = { owner: 'jue', repo: 'nipao.site' };
-                await BlogUtils.deleteFileFromRepo(github, targetRepo, targetFilePath, `Delete blog: Closed issue #${issueNumber}`, issueNumber);
-                
                 // 添加评论告知已删除
                 // Add a comment to notify of deletion
                 await github.rest.issues.createComment({
                   ...repoInfo,
                   issue_number: issueNumber,
-                  body: `🗑️ 博客文章已根据 Issue 关闭状态自动删除，并同步到 nipao.site 仓库。`
+                  body: `🗑️ 博客文章已根据 Issue 关闭状态自动删除。`
                 });
               } else {
                 console.log(`File ${targetFilePath} exists but doesn't match issue #${issueNumber}.`);
@@ -187,12 +182,6 @@ jobs:
             });
 
             console.log(`Successfully processed ${filePath}`);
-
-            // 同步到 nipao.site 仓库
-            // Sync to nipao.site repository
-            const targetRepo = { owner: 'jue', repo: 'nipao.site' };
-            const syncMessage = existingFileSha ? `Update blog: ${issue.title}` : `Create blog: ${issue.title}`;
-            await BlogUtils.syncFileToRepo(github, targetRepo, filePath, fileContent, syncMessage, issueNumber);
 
       # 步骤六：更新 README.md 中的 Issue 列表
       # Step 6: Update Issue list in README.md
