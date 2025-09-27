@@ -51,7 +51,7 @@ githubUrl: "https://github.com/jue/jue.github.io/issues/8"
     `https://chatgpt.com/#pricing`
 * **检查：** 仔细查看页面里，Plus 套餐的价格是不是显示为 **“Plus 特别优惠”** 或类似的“0元购”特别优惠提示。
 
-<img width="4019" height="2095" alt="Image" src="https://github.com/user-attachments/assets/7d8ca6cf-a19e-41a5-af24-a938cd789d90" />
+<img width="4019" height="2095" alt="Image" src="https://github-cdn.nipao.com/user-attachments/assets/7d8ca6cf-a19e-41a5-af24-a938cd789d90" />
 
 * **注意：** 如果你看到的还是原价 $20/月，别灰心！这不代表你不行，大概率是“姿势”不对。**试试这几招：**
     * 清理浏览器缓存和 Cookies。
@@ -68,7 +68,7 @@ githubUrl: "https://github.com/jue/jue.github.io/issues/8"
 * **关于账单地址：** 此时页面上可能会让你填账单地址。别担心，**这个地址信息可以随意填写**。我当时填的就是浏览器自动记住的美国地址。如果你有长远续费的打算，可以填一个美国的免税州地址，能省点税。
 * **跳转授权：** 点击 PayPal 后，页面会安全地跳转到 PayPal 官网。登录你的账号，你会看到一个对 OpenAI 的 0 元支付授权。**大胆地点“同意并继续”**，因为真的是免费的！
 
-<img width="4019" height="2096" alt="Image" src="https://github.com/user-attachments/assets/9db61d65-93b6-4be7-a362-8c527f956ecd" />
+<img width="4019" height="2096" alt="Image" src="https://github-cdn.nipao.com/user-attachments/assets/9db61d65-93b6-4be7-a362-8c527f956ecd" />
 
 ##### **3. 升级成功！然后取消订阅**
 
@@ -80,14 +80,14 @@ githubUrl: "https://github.com/jue/jue.github.io/issues/8"
     * 在 ChatGPT 页面左下角，点击你的用户名 -> "设置" -> "帐户"。
     * 点击 “管理” 出现下拉菜单，找到并点击“取消订阅” 。
 
-<img width="4019" height="2095" alt="Image" src="https://github.com/user-attachments/assets/f7c699ef-f122-4504-8c7e-d7208aa4dabc" />
+<img width="4019" height="2095" alt="Image" src="https://github-cdn.nipao.com/user-attachments/assets/f7c699ef-f122-4504-8c7e-d7208aa4dabc" />
 
 * **方法二（双重保险）：在 PayPal 里取消**
     * 如果你对 OpenAI 不放心，可以去 PayPal 里取消OpenAI支付。登录 PayPal，访问下面的自动付款管理地址：
         `https://www.paypal.com/myaccount/autopay`
     * 在列表中找到“OpenAI”，点击它，然后选择“停止PayPal支付”或“Stop paying with PayPal”，这样就彻底切断了自动扣款的授权。
 
-<img width="4019" height="2095" alt="Image" src="https://github.com/user-attachments/assets/d85aa45b-2ea7-452d-b21f-0cb599b900af" />
+<img width="4019" height="2095" alt="Image" src="https://github-cdn.nipao.com/user-attachments/assets/d85aa45b-2ea7-452d-b21f-0cb599b900af" />
 
 
 ---

@@ -69,9 +69,9 @@ published: true
     <ul v-if="articles && articles.length">
       <li v-for="article in articles" :key="article._path">
         <NuxtLink :to="article._path">
-          <h2>{{ article.title }}</h2>
-          <p>{{ article.description }}</p>
-          <time>{{ new Date(article.date).toLocaleDateString() }}</time>
+          <h2>{ { article.title } }</h2>
+          <p>{ { article.description } }</p>
+          <time>{ { new Date(article.date).toLocaleDateString() } }</time>
         </NuxtLink>
       </li>
     </ul>
@@ -128,11 +128,11 @@ a {
     <div class="surround-navigation">
       <NuxtLink v-if="prev" :to="prev._path" class="prev">
         <span>上一篇</span>
-        <p>{{ prev.title }}</p>
+        <p>{ { prev.title } }</p>
       </NuxtLink>
       <span v-else></span> <NuxtLink v-if="next" :to="next._path" class="next">
         <span>下一篇</span>
-        <p>{{ next.title }}</p>
+        <p>{ { next.title } }</p>
       </NuxtLink>
     </div>
   </main>
@@ -198,10 +198,10 @@ const [prev, next] = surround.value || [null, null];
     <nav>
       <ul v-if="navigation?.length">
         <li v-for="item in navigation" :key="item._path">
-          <NuxtLink :to="item._path">{{ item.title }}</NuxtLink>
+          <NuxtLink :to="item._path">{ { item.title } }</NuxtLink>
           <ul v-if="item.children?.length">
             <li v-for="child in item.children" :key="child._path">
-               <NuxtLink :to="child._path">{{ child.title }}</NuxtLink>
+               <NuxtLink :to="child._path">{ { child.title } }</NuxtLink>
             </li>
           </ul>
         </li>
@@ -226,7 +226,7 @@ const { data: navigation } = await useAsyncData('navigation', () => fetchContent
 它不会直接提供一个完整的搜索解决方案，而是将你的文档内容智能地分割成可搜索的小块（sections），每一块都包含标题、纯文本内容和层级信息。
 
 **应用场景：**
-将处理后的数据喂给前端搜索库（如 [Fuse.js](https://fusejs.io/) 或 [FlexSearch](https://github.com/nextapps-de/flexsearch)），构建高性能的站内全文搜索功能。
+将处理后的数据喂给前端搜索库（如 [Fuse.js](https://fusejs.io/) 或 [FlexSearch](https://github-cdn.nipao.com/nextapps-de/flexsearch)），构建高性能的站内全文搜索功能。
 
 **代码实现：一个极简的搜索组件**
 
@@ -243,8 +243,8 @@ const { data: navigation } = await useAsyncData('navigation', () => fetchContent
     <ul v-if="results.length">
       <li v-for="result in results" :key="result.id">
         <NuxtLink :to="result.path + '#' + result.id">
-          <strong>{{ result.title }}</strong>
-          <p>{{ result.text.substring(0, 150) }}...</p>
+          <strong>{ { result.title } }</strong>
+          <p>{ { result.text.substring(0, 150) } }...</p>
         </NuxtLink>
       </li>
     </ul>
