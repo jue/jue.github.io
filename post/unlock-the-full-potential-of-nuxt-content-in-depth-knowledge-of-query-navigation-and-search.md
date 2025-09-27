@@ -1,13 +1,19 @@
 ---
-title: '释放 Nuxt Content 的全部潜力：深入了解查询、导航与搜索'
-description: '@nuxt/content 是 Nuxt 生态中最受欢迎的模块之一。它能让你轻松地将 Markdown、YAML、CSV 或 JSON 文件作为内容源，从而构建出功能强大的内容驱动型网站，无论是博客、文档还是作品集。 大多数开发者都熟悉 queryContent 的基本用法，但 Nuxt Conte...'
-author: 'jue'
+title: "释放 Nuxt Content 的全部潜力：深入了解查询、导航与搜索"
+description: "@nuxt/content 是 Nuxt 生态中最受欢迎的模块之一。它能让你轻松地将 Markdown、YAML、CSV 或 JSON 文件作为内容源，从而构建出功能强大的内容驱动型网站，无论是博客、文档还是作品集。 大多数开发者都熟悉 queryContent 的基本用法，但 Nuxt Conte..."
 date: 2025-09-02
 lastUpdated: 2025-09-02
-category: 'Tech Talk'
-issue_number: 6
+authors:
+  - name: "jue"
+    link: "https://github.com/jue"
+    avatar: "https://avatars.githubusercontent.com/u/377499?v=4"
+categories:
+  - "Tech Talk"
+wordCount: 1782
+readingTime: 6
+githubIssue: 6
+githubUrl: "https://github.com/jue/jue.github.io/issues/6"
 ---
-
 `@nuxt/content` 是 Nuxt 生态中最受欢迎的模块之一。它能让你轻松地将 Markdown、YAML、CSV 或 JSON 文件作为内容源，从而构建出功能强大的内容驱动型网站，无论是博客、文档还是作品集。
 
 大多数开发者都熟悉 `queryContent` 的基本用法，但 Nuxt Content 提供的能力远不止于此。它内置了一套强大的工具集，可以帮你处理内容之间的关系、自动生成导航，甚至为站内搜索打下基础。
@@ -36,6 +42,7 @@ date: '2025-09-02'
 tags: ['Nuxt', 'Content']
 published: true
 ---
+
 这是文章的正文内容...
 ```
 
@@ -55,7 +62,7 @@ published: true
 
 在 `pages/articles/index.vue` 文件中，我们可以这样获取所有已发布并按日期倒序排列的文章：
 
-```
+```vue
 <template>
   <div>
     <h1>所有文章</h1>
@@ -74,15 +81,13 @@ published: true
 
 <script setup>
 // 使用 queryContent 获取内容
-const { data: articles } = await useAsyncData(
-  'all-articles',
-  () =>
-    queryContent('articles') // 指定查询 'articles' 目录
-      .where({ published: true }) // 筛选条件：只显示已发布的
-      .sort({ date: -1 }) // 排序：按日期降序（-1 代表 desc）
-      .only(['_path', 'title', 'description', 'date']) // 只获取需要的字段以优化性能
-      .find() // 执行查询
-)
+const { data: articles } = await useAsyncData('all-articles', () =>
+  queryContent('articles') // 指定查询 'articles' 目录
+    .where({ published: true }) // 筛选条件：只显示已发布的
+    .sort({ date: -1 }) // 排序：按日期降序（-1 代表 desc）
+    .only(['_path', 'title', 'description', 'date']) // 只获取需要的字段以优化性能
+    .find() // 执行查询
+);
 </script>
 
 <style scoped>
@@ -115,7 +120,7 @@ a {
 
 在你的动态路由文件 `pages/articles/[...slug].vue` 中：
 
-```
+```vue
 <template>
   <main>
     <ContentDoc />
@@ -125,8 +130,7 @@ a {
         <span>上一篇</span>
         <p>{{ prev.title }}</p>
       </NuxtLink>
-      <span v-else></span>
-      <NuxtLink v-if="next" :to="next._path" class="next">
+      <span v-else></span> <NuxtLink v-if="next" :to="next._path" class="next">
         <span>下一篇</span>
         <p>{{ next.title }}</p>
       </NuxtLink>
@@ -135,18 +139,16 @@ a {
 </template>
 
 <script setup>
-const { path } = useRoute()
+const { path } = useRoute();
 
 // 获取相邻文章，它返回一个包含 [prev, next] 的数组
-const { data: surround } = await useAsyncData(
-  `surround-${path}`,
-  () =>
-    queryContent('articles')
-      .only(['_path', 'title']) // 同样可以只选择需要的字段
-      .findSurround(path) // 核心方法：传入当前页面的路径
-)
+const { data: surround } = await useAsyncData(`surround-${path}`, () =>
+  queryContent('articles')
+    .only(['_path', 'title']) // 同样可以只选择需要的字段
+    .findSurround(path) // 核心方法：传入当前页面的路径
+);
 
-const [prev, next] = surround.value || [null, null]
+const [prev, next] = surround.value || [null, null];
 </script>
 
 <style scoped>
@@ -190,7 +192,7 @@ const [prev, next] = surround.value || [null, null]
 
 你可以创建一个组件 `components/AppSidebar.vue`：
 
-```
+```vue
 <template>
   <aside>
     <nav>
@@ -199,7 +201,7 @@ const [prev, next] = surround.value || [null, null]
           <NuxtLink :to="item._path">{{ item.title }}</NuxtLink>
           <ul v-if="item.children?.length">
             <li v-for="child in item.children" :key="child._path">
-              <NuxtLink :to="child._path">{{ child.title }}</NuxtLink>
+               <NuxtLink :to="child._path">{{ child.title }}</NuxtLink>
             </li>
           </ul>
         </li>
@@ -210,9 +212,7 @@ const [prev, next] = surround.value || [null, null]
 
 <script setup>
 // 获取整个项目的导航树
-const { data: navigation } = await useAsyncData('navigation', () =>
-  fetchContentNavigation()
-)
+const { data: navigation } = await useAsyncData('navigation', () => fetchContentNavigation());
 </script>
 ```
 
@@ -232,10 +232,14 @@ const { data: navigation } = await useAsyncData('navigation', () =>
 
 这个例子展示了如何获取并展示搜索数据。在实际项目中，你需要结合一个搜索库来实现模糊匹配和高亮。
 
-```
+```vue
 <template>
   <div>
-    <input v-model="query" type="search" placeholder="搜索文章内容..." />
+    <input
+      v-model="query"
+      type="search"
+      placeholder="搜索文章内容..."
+    />
     <ul v-if="results.length">
       <li v-for="result in results" :key="result.id">
         <NuxtLink :to="result.path + '#' + result.id">
@@ -248,45 +252,40 @@ const { data: navigation } = await useAsyncData('navigation', () =>
 </template>
 
 <script setup>
-import { ref, watch } from 'vue'
+import { ref, watch } from 'vue';
 
-const query = ref('')
-const searchData = ref([])
-const results = ref([])
+const query = ref('');
+const searchData = ref([]);
+const results = ref([]);
 
 // 1. 获取所有可供搜索的数据
-const { data } = await useAsyncData('search-data', () => searchContent())
+const { data } = await useAsyncData('search-data', () => searchContent());
 if (data.value) {
   // 简单地将数据扁平化处理
-  searchData.value = data.value.flatMap((doc) =>
+  searchData.value = data.value.flatMap(doc => 
     doc.body.children
       // 通常我们只索引标题和段落
-      .filter((section) => ['h1', 'h2', 'h3', 'p'].includes(section.tag))
-      .map((section) => ({
+      .filter(section => ['h1','h2','h3','p'].includes(section.tag))
+      .map(section => ({
         id: section.props.id,
         path: doc._path,
-        title: section.tag.startsWith('h')
-          ? section.children[0].value
-          : doc.title,
+        title: section.tag.startsWith('h') ? section.children[0].value : doc.title,
         text: section.children?.[0]?.value || ''
       }))
-  )
+  );
 }
 
 // 2. 监听输入并执行搜索 (这里是极简的实现)
 watch(query, (newQuery) => {
   if (!newQuery) {
-    results.value = []
+    results.value = [];
   } else {
-    results.value = searchData.value
-      .filter(
-        (item) =>
-          item.title.toLowerCase().includes(newQuery.toLowerCase()) ||
-          item.text.toLowerCase().includes(newQuery.toLowerCase())
-      )
-      .slice(0, 10) // 只显示前10条结果
+    results.value = searchData.value.filter(item =>
+      item.title.toLowerCase().includes(newQuery.toLowerCase()) ||
+      item.text.toLowerCase().includes(newQuery.toLowerCase())
+    ).slice(0, 10); // 只显示前10条结果
   }
-})
+});
 </script>
 ```
 
@@ -294,9 +293,9 @@ watch(query, (newQuery) => {
 
 通过掌握这四个强大的查询功能，你可以将 Nuxt Content 的能力发挥到极致：
 
-- **`queryContent`** 是数据获取的基石。
-- **`findSurround`** 负责连接内容，优化阅读流。
-- **`fetchContentNavigation`** 自动化构建网站结构。
-- **`searchContent`** 为内容赋予了被发现的智慧。
+  - **`queryContent`** 是数据获取的基石。
+  - **`findSurround`** 负责连接内容，优化阅读流。
+  - **`fetchContentNavigation`** 自动化构建网站结构。
+  - **`searchContent`** 为内容赋予了被发现的智慧。
 
 下次当你构建 Nuxt Content 项目时，不妨试试这些功能。它们会让你的开发过程更高效，也会让你的最终成品更专业、更易用。现在就开始探索，释放你内容的全部潜力吧！

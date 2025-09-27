@@ -1,16 +1,22 @@
 ---
-title: 'TailwindCSS 布局利器：彻底理解 `min-h-0` 的作用与用法'
-description: '在用 TailwindCSS 搭建响应式布局，尤其是基于 Flexbox 的结构时，你或许会遇到这样一个不起眼但非常关键的工具类——min-h-0。本文将拆解它的原理、应用场景，以及最佳实践。  一、min-h-0 是什么？ 在 TailwindCSS 中，min-h-0 代表的是 CSS 属性 m...'
-author: 'jue'
+title: "TailwindCSS 布局利器：彻底理解 `min-h-0` 的作用与用法"
+description: "在用 TailwindCSS 搭建响应式布局，尤其是基于 Flexbox 的结构时，你或许会遇到这样一个不起眼但非常关键的工具类——min-h-0。本文将拆解它的原理、应用场景，以及最佳实践。  一、min-h-0 是什么？ 在 TailwindCSS 中，min-h-0 代表的是 CSS 属性 m..."
 date: 2025-09-18
 lastUpdated: 2025-09-18
-category: 'Tech Talk'
-issue_number: 10
+authors:
+  - name: "jue"
+    link: "https://github.com/jue"
+    avatar: "https://avatars.githubusercontent.com/u/377499?v=4"
+categories:
+  - "Tech Talk"
+wordCount: 717
+readingTime: 2
+githubIssue: 10
+githubUrl: "https://github.com/jue/jue.github.io/issues/10"
 ---
-
 在用 TailwindCSS 搭建响应式布局，尤其是基于 Flexbox 的结构时，你或许会遇到这样一个不起眼但非常关键的工具类——`min-h-0`。本文将拆解它的原理、应用场景，以及最佳实践。
 
----
+***
 
 ## 一、`min-h-0` 是什么？
 
@@ -18,7 +24,7 @@ issue_number: 10
 
 虽然看起来很简单，但在 Flexbox 布局中却有着举足轻重的地位。
 
----
+***
 
 ## 二、为什么需要 `min-h-0`？（原理剖析）
 
@@ -27,7 +33,6 @@ issue_number: 10
 在 Flexbox（弹性盒子）布局中，flex 子元素的最小高度/宽度默认会继承内容高度（`min-height: auto`），导致内容过多时，子元素不能有效收缩，进而撑破整个父容器。
 
 #### 典型现象
-
 - 子元素设置了 `overflow: auto`，却无法正确滚动，内容将父容器撑开。
 - `flex-1` 无法让内容区随窗口缩放而缩小，影响布局自适应。
 
@@ -35,7 +40,7 @@ issue_number: 10
 
 当给 flex 子元素加上 `min-h-0`，就等同于告诉浏览器「允许我缩小到 0」，这时候 `flex` 子项就能如你所愿地让内容溢出部分进行滚动，也不会撑破外层布局。
 
----
+***
 
 ## 三、最佳应用场景
 
@@ -51,7 +56,7 @@ issue_number: 10
 
 **原理**：`min-h-0` 保证了 `<main>` 能在 flex 环境下收缩，只有这样和 `overflow-y-auto` 配合才会产生滚动条，内容不会撑爆页面。
 
----
+***
 
 ### 2. 多层嵌套的 Flexbox 布局
 
@@ -59,14 +64,16 @@ issue_number: 10
 <div class="flex flex-col h-96">
   <div class="flex-1 min-h-0 flex">
     <aside class="w-48 bg-gray-100">侧边栏</aside>
-    <section class="flex-1 min-h-0 overflow-auto">主内容区，可以滚动</section>
+    <section class="flex-1 min-h-0 overflow-auto">
+      主内容区，可以滚动
+    </section>
   </div>
 </div>
 ```
 
 **原理**：只有内层的 section 设置 `min-h-0`，内容区才能和 aside 正确地「分享高度」，section 里内容超出时可滚动。
 
----
+***
 
 ### 3. 表格或大数据展示
 
@@ -82,7 +89,7 @@ issue_number: 10
 
 **原理**：满足表格内容多时，将其高度限制在父容器内且支持滚动，界面不会被撑坏。
 
----
+***
 
 ## 四、注意事项 & 总结
 
@@ -94,6 +101,6 @@ issue_number: 10
 
 **在 TailwindCSS + Flexbox 布局中，当你需要「内容可滚动且不撑破父容器」时，加上 `min-h-0`，就对了！**
 
----
+***
 
 希望这篇文章能让你彻底掌握 `min-h-0` 的原理和用法，在开发中合理利用，打造更健壮的响应式布局！

@@ -1,14 +1,20 @@
 ---
-title: 'Proxmox VE下实现虚拟机（Guest OS）宕机后自动重启的问题'
-description: '前言：为什么需要这个功能？ 作为 Proxmox VE (PVE) 用户，我们都享受着它带来的强大虚拟化能力。但一个常见的痛点是：PVE 主机本身稳定如山，可里面的某台虚拟机（Guest OS）却可能因为应用 Bug、内存溢出或内核崩溃而陷入“假死”状态。此时，虚拟机进程在 PVE 上看是运行的，但...'
-author: 'jue'
+title: "Proxmox VE下实现虚拟机（Guest OS）宕机后自动重启的问题"
+description: "前言：为什么需要这个功能？ 作为 Proxmox VE (PVE) 用户，我们都享受着它带来的强大虚拟化能力。但一个常见的痛点是：PVE 主机本身稳定如山，可里面的某台虚拟机（Guest OS）却可能因为应用 Bug、内存溢出或内核崩溃而陷入“假死”状态。此时，虚拟机进程在 PVE 上看是运行的，但..."
 date: 2025-08-22
 lastUpdated: 2025-09-02
-category: 'Tech Talk'
-cover: 'https://github.com/user-attachments/assets/ca3655dd-9bac-411c-9baa-ecb0e6262c0b'
-issue_number: 3
+authors:
+  - name: "jue"
+    link: "https://github.com/jue"
+    avatar: "https://avatars.githubusercontent.com/u/377499?v=4"
+cover: "https://github.com/user-attachments/assets/ca3655dd-9bac-411c-9baa-ecb0e6262c0b"
+categories:
+  - "Tech Talk"
+wordCount: 1752
+readingTime: 6
+githubIssue: 3
+githubUrl: "https://github.com/jue/jue.github.io/issues/3"
 ---
-
 #### 前言：为什么需要这个功能？
 
 作为 Proxmox VE (PVE) 用户，我们都享受着它带来的强大虚拟化能力。但一个常见的痛点是：PVE 主机本身稳定如山，可里面的某台虚拟机（Guest OS）却可能因为应用 Bug、内存溢出或内核崩溃而陷入“假死”状态。此时，虚拟机进程在 PVE 上看是运行的，但其内部系统已经停止响应，导致服务中断。
@@ -24,7 +30,7 @@ issue_number: 3
 1.  **建立“生命线”**：在 PVE 主机和虚拟机之间建立一条可靠的通信渠道。这样 PVE 才能准确“感知”到虚拟机内部的真实状态。我们将使用官方推荐的 **QEMU Guest Agent** 来实现。
 2.  **创建“哨兵”**：在 PVE 主机上部署一个监控脚本。这个脚本会定期通过“生命线”去探测虚拟机，如果发现对方没有回应，就立即执行重启命令。
 
----
+-----
 
 ### 第一部分：建立“生命线” - 配置 QEMU Guest Agent
 
@@ -71,12 +77,12 @@ qm set 101 --agent enabled=1,type=virtio
 
 完成以上配置后，启动您的虚拟机。等待启动完成后，在 PVE 界面选中该虚拟机，查看 `Summary`（概要）页面。
 
-- **成功标志**：在 "IPs" 区域，您能清楚地看到虚拟机的 IP 地址。
-- **失败标志**：您会看到红字的提示 "Guest Agent not running"。
+  * **成功标志**：在 "IPs" 区域，您能清楚地看到虚拟机的 IP 地址。
+  * **失败标志**：您会看到红字的提示 "Guest Agent not running"。
 
 如果看到成功标志，恭喜您，最困难的部分已经完成！可以跳到第二部分。如果失败，请参阅文末的“疑难解答”部分。
 
----
+-----
 
 ### 第二部分：创建“哨兵” - 部署监控重启脚本
 
@@ -113,10 +119,10 @@ qm set 101 --agent enabled=1,type=virtio
     if [[ "$agent_status" == *"error"* || "$agent_status" == "" ]]; then
         # 如果 Agent 返回错误或因超时导致结果为空，则认为 VM 宕机
         echo "$(date): Watchdog detected ${VMNAME} (ID: ${VMID}) is down. Attempting to reboot." >> ${LOG_FILE}
-
+        
         # 使用 reset 命令强制重启虚拟机，这比 stop/start 更有效
         qm reset ${VMID} --force
-
+        
         echo "$(date): Reboot command sent to ${VMNAME} (ID: ${VMID})." >> ${LOG_FILE}
     else
         # VM 正常，不做任何事，也可以取消下面一行的注释来记录健康检查日志
@@ -144,7 +150,7 @@ qm set 101 --agent enabled=1,type=virtio
 
 至此，整个哨兵系统已经部署完毕！它会从此开始，年复一年、日复一日地为您守护虚拟机的稳定运行。
 
----
+-----
 
 ### 疑难解答 (Troubleshooting)
 
@@ -152,17 +158,17 @@ qm set 101 --agent enabled=1,type=virtio
 
 1.  **问题：PVE 概要页显示 "Guest Agent not running"**
 
-    - **原因 A**：您没有在**关机状态**下为虚拟机配置 Agent。PVE 的很多硬件相关设置需要关机才能生效。
-    - **原因 B**：虚拟机内部的 `qemu-guest-agent` 服务没有成功运行。请登录虚拟机执行 `sudo systemctl status qemu-guest-agent` 查看具体错误。
+      * **原因 A**：您没有在**关机状态**下为虚拟机配置 Agent。PVE 的很多硬件相关设置需要关机才能生效。
+      * **原因 B**：虚拟机内部的 `qemu-guest-agent` 服务没有成功运行。请登录虚拟机执行 `sudo systemctl status qemu-guest-agent` 查看具体错误。
 
 2.  **问题：虚拟机内部服务报错，找不到 `/dev/virtio-ports/org.qemu.guest_agent.0`**
 
-    - 这是最核心的问题！它意味着 PVE 没有成功地为虚拟机创建 VirtIO 通信设备。**根本原因**通常是 PVE 侧的 Agent 配置没有被正确应用。
-    - **最佳解决方案**：彻底关闭虚拟机，然后在 PVE 主机 Shell 中执行 `qm set 你的VMID --agent enabled=1,type=virtio`，再开机。这条命令会强制以正确的方式创建通信渠道。
+      * 这是最核心的问题！它意味着 PVE 没有成功地为虚拟机创建 VirtIO 通信设备。**根本原因**通常是 PVE 侧的 Agent 配置没有被正确应用。
+      * **最佳解决方案**：彻底关闭虚拟机，然后在 PVE 主机 Shell 中执行 `qm set 你的VMID --agent enabled=1,type=virtio`，再开机。这条命令会强制以正确的方式创建通信渠道。
 
 3.  **问题：Web 界面 `Hardware -> Add` 菜单里找不到 `Guest Agent` 选项**
 
-    - 99% 的可能性是您的虚拟机正在运行。请先将其**彻底关机**再尝试。
+      * 99% 的可能性是您的虚拟机正在运行。请先将其**彻底关机**再尝试。
 
 #### 结语
 

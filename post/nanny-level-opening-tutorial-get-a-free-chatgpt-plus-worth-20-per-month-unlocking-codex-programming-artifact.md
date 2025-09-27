@@ -1,14 +1,20 @@
 ---
-title: '保姆级开通教程：白嫖一个月价值$20的ChatGPT Plus，解锁 Codex 编程神器'
-description: '导语： 要说最近开发者社区里最火的“神器”是啥？那必须是 OpenAI 的编码智能体 CodeX！一个能帮你写代码、改 Bug、甚至重构整个项目的 AI 伙伴，简直不要太香。 但现实很骨感：想用上这个神器，就得开通 ChatGPT Plus 会员。订阅支付是国内用户面临的主要障碍。 不过，机会来了！...'
-author: 'jue'
+title: "保姆级开通教程：白嫖一个月价值$20的ChatGPT Plus，解锁 Codex 编程神器"
+description: "导语： 要说最近开发者社区里最火的“神器”是啥？那必须是 OpenAI 的编码智能体 CodeX！一个能帮你写代码、改 Bug、甚至重构整个项目的 AI 伙伴，简直不要太香。 但现实很骨感：想用上这个神器，就得开通 ChatGPT Plus 会员。订阅支付是国内用户面临的主要障碍。 不过，机会来了！..."
 date: 2025-09-16
 lastUpdated: 2025-09-16
-category: 'Share'
-cover: 'https://github.com/user-attachments/assets/7d8ca6cf-a19e-41a5-af24-a938cd789d90'
-issue_number: 8
+authors:
+  - name: "jue"
+    link: "https://github.com/jue"
+    avatar: "https://avatars.githubusercontent.com/u/377499?v=4"
+cover: "https://github.com/user-attachments/assets/7d8ca6cf-a19e-41a5-af24-a938cd789d90"
+categories:
+  - "Share"
+wordCount: 1274
+readingTime: 4
+githubIssue: 8
+githubUrl: "https://github.com/jue/jue.github.io/issues/8"
 ---
-
 **导语：**
 要说最近开发者社区里最火的“神器”是啥？那必须是 OpenAI 的编码智能体 **CodeX**！一个能帮你写代码、改 Bug、甚至重构整个项目的 AI 伙伴，简直不要太香。
 
@@ -41,16 +47,16 @@ issue_number: 8
 
 首先，我们需要确认你的账号有资格领取这个福利。
 
-- **操作：** 打开浏览器（强烈推荐**无痕模式**），访问下面的地址：
-  `https://chatgpt.com/#pricing`
-- **检查：** 仔细查看页面里，Plus 套餐的价格是不是显示为 **“Plus 特别优惠”** 或类似的“0 元购”特别优惠提示。
+* **操作：** 打开浏览器（强烈推荐**无痕模式**），访问下面的地址：
+    `https://chatgpt.com/#pricing`
+* **检查：** 仔细查看页面里，Plus 套餐的价格是不是显示为 **“Plus 特别优惠”** 或类似的“0元购”特别优惠提示。
 
 <img width="4019" height="2095" alt="Image" src="https://github.com/user-attachments/assets/7d8ca6cf-a19e-41a5-af24-a938cd789d90" />
 
-- **注意：** 如果你看到的还是原价 $20/月，别灰心！这不代表你不行，大概率是“姿势”不对。**试试这几招：**
-  - 清理浏览器缓存和 Cookies。
-  - 换一个“科学上网”工具的欧洲节点（比如从德国换到法国）。
-  - 实在不行，就换一个 OpenAI 账号试试。
+* **注意：** 如果你看到的还是原价 $20/月，别灰心！这不代表你不行，大概率是“姿势”不对。**试试这几招：**
+    * 清理浏览器缓存和 Cookies。
+    * 换一个“科学上网”工具的欧洲节点（比如从德国换到法国）。
+    * 实在不行，就换一个 OpenAI 账号试试。
 
 只要出现了 0 元优惠，那么恭喜你，可以进入下一步了！
 
@@ -58,9 +64,9 @@ issue_number: 8
 
 这是最关键的一步，请睁大眼睛！
 
-- **操作：** 点击订阅按钮后，会进入支付信息页面。在这里，**请务必、一定、切记要选择 PayPal 支付！**
-- **关于账单地址：** 此时页面上可能会让你填账单地址。别担心，**这个地址信息可以随意填写**。我当时填的就是浏览器自动记住的美国地址。如果你有长远续费的打算，可以填一个美国的免税州地址，能省点税。
-- **跳转授权：** 点击 PayPal 后，页面会安全地跳转到 PayPal 官网。登录你的账号，你会看到一个对 OpenAI 的 0 元支付授权。**大胆地点“同意并继续”**，因为真的是免费的！
+* **操作：** 点击订阅按钮后，会进入支付信息页面。在这里，**请务必、一定、切记要选择 PayPal 支付！**
+* **关于账单地址：** 此时页面上可能会让你填账单地址。别担心，**这个地址信息可以随意填写**。我当时填的就是浏览器自动记住的美国地址。如果你有长远续费的打算，可以填一个美国的免税州地址，能省点税。
+* **跳转授权：** 点击 PayPal 后，页面会安全地跳转到 PayPal 官网。登录你的账号，你会看到一个对 OpenAI 的 0 元支付授权。**大胆地点“同意并继续”**，因为真的是免费的！
 
 <img width="4019" height="2096" alt="Image" src="https://github.com/user-attachments/assets/9db61d65-93b6-4be7-a362-8c527f956ecd" />
 
@@ -70,18 +76,19 @@ issue_number: 8
 
 但为了防止一个月后忘记而被自动扣款，我们要做一个“优雅”的操作——**立即取消订阅**。放心，取消后，你的 Plus 资格会持续到一个月免费期结束。
 
-- **方法一（推荐）：在 OpenAI 官网取消**
-  - 在 ChatGPT 页面左下角，点击你的用户名 -> "设置" -> "帐户"。
-  - 点击 “管理” 出现下拉菜单，找到并点击“取消订阅” 。
+* **方法一（推荐）：在 OpenAI 官网取消**
+    * 在 ChatGPT 页面左下角，点击你的用户名 -> "设置" -> "帐户"。
+    * 点击 “管理” 出现下拉菜单，找到并点击“取消订阅” 。
 
 <img width="4019" height="2095" alt="Image" src="https://github.com/user-attachments/assets/f7c699ef-f122-4504-8c7e-d7208aa4dabc" />
 
-- **方法二（双重保险）：在 PayPal 里取消**
-  - 如果你对 OpenAI 不放心，可以去 PayPal 里取消 OpenAI 支付。登录 PayPal，访问下面的自动付款管理地址：
-    `https://www.paypal.com/myaccount/autopay`
-  - 在列表中找到“OpenAI”，点击它，然后选择“停止 PayPal 支付”或“Stop paying with PayPal”，这样就彻底切断了自动扣款的授权。
+* **方法二（双重保险）：在 PayPal 里取消**
+    * 如果你对 OpenAI 不放心，可以去 PayPal 里取消OpenAI支付。登录 PayPal，访问下面的自动付款管理地址：
+        `https://www.paypal.com/myaccount/autopay`
+    * 在列表中找到“OpenAI”，点击它，然后选择“停止PayPal支付”或“Stop paying with PayPal”，这样就彻底切断了自动扣款的授权。
 
 <img width="4019" height="2095" alt="Image" src="https://github.com/user-attachments/assets/d85aa45b-2ea7-452d-b21f-0cb599b900af" />
+
 
 ---
 
