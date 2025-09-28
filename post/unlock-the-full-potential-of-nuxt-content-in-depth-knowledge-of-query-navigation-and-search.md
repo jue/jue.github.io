@@ -226,7 +226,7 @@ const { data: navigation } = await useAsyncData('navigation', () => fetchContent
 它不会直接提供一个完整的搜索解决方案，而是将你的文档内容智能地分割成可搜索的小块（sections），每一块都包含标题、纯文本内容和层级信息。
 
 **应用场景：**
-将处理后的数据喂给前端搜索库（如 [Fuse.js](https://fusejs.io/) 或 [FlexSearch](https://github-cdn.nipao.com/nextapps-de/flexsearch)），构建高性能的站内全文搜索功能。
+将处理后的数据喂给前端搜索库（如 [Fuse.js](https://fusejs.io/) 或 [FlexSearch](https://github.com/nextapps-de/flexsearch)），构建高性能的站内全文搜索功能。
 
 **代码实现：一个极简的搜索组件**
 

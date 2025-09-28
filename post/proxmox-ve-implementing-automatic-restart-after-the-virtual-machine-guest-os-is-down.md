@@ -21,7 +21,7 @@ githubUrl: "https://github.com/jue/jue.github.io/issues/3"
 
 手动登录 PVE 然后重启虚拟机固然可以解决，但这显然不够自动化和高可用。本教程将带你从零开始，构建一个稳定可靠的“哨兵”系统，让 PVE 能够自动侦测到虚拟机的“假死”状态，并果断执行重启操作，实现服务的自动恢复。
 
-<img width="3840" height="2160" alt="Image" src="https://github-cdn.nipao.com/user-attachments/assets/ca3655dd-9bac-411c-9baa-ecb0e6262c0b" />
+<img width="3840" height="2160" alt="Image" src="https://github.com/user-attachments/assets/ca3655dd-9bac-411c-9baa-ecb0e6262c0b" />
 
 #### 核心思路
 
