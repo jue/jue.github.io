@@ -30,6 +30,13 @@ export default defineConfig({
         name: 'msvalidate.01',
         content: '9B58387904FD6F8AF0E775C590906D37'
       }
+    ],
+    [
+      'meta',
+      {
+        name: 'baidu-site-verification',
+        content: 'codeva-TWwKHGS8ix'
+      }
     ]
     // [
     //   'script',
