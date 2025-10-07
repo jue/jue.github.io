@@ -48,7 +48,21 @@ export default defineConfig({
     //   }
     // ]
   ],
-  themeConfig: {},
+  themeConfig: {
+    nav: [
+      {
+        text: '教育邮箱',
+        link: 'https://edumail.nipao.com',
+        target: '_blank',
+        rel: 'noopener'
+      },
+      {
+        text: 'RSS Feed',
+        link: '/feed.rss',
+        rel: 'alternate'
+      }
+    ]
+  },
   buildEnd: genFeed,
 
   vite: {

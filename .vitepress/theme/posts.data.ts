@@ -1,6 +1,6 @@
 import { createContentLoader } from 'vitepress'
 
-interface Post {
+export interface Post {
   title: string
   url: string
   date: {
@@ -8,6 +8,7 @@ interface Post {
     string: string
   }
   excerpt: string | undefined
+  categories: string[]
 }
 
 declare const data: Post[]
@@ -21,6 +22,7 @@ export default createContentLoader('post/*.md', {
         title: frontmatter.title,
         url,
         excerpt,
+        categories: normalizeCategories(frontmatter.categories),
         date: formatDate(frontmatter.date || new Date())
       }))
       .sort((a, b) => b.date.time - a.date.time)
@@ -44,4 +46,24 @@ function formatDate(raw: string | Date | undefined): Post['date'] {
       day: 'numeric'
     })
   }
+}
+
+function normalizeCategories(input: unknown): string[] {
+  if (!input) {
+    return []
+  }
+
+  const values = Array.isArray(input)
+    ? input
+    : typeof input === 'string'
+      ? input.split(',').map((value) => value.trim())
+      : []
+
+  return Array.from(
+    new Set(
+      values
+        .map((value) => String(value).trim())
+        .filter((value) => value.length > 0)
+    )
+  )
 }

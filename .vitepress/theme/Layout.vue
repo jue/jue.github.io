@@ -5,6 +5,7 @@ import Article from './Article.vue'
 import NotFound from './NotFound.vue'
 
 const { page, frontmatter } = useData()
+const { theme } = useData()
 </script>
 
 <template>
@@ -25,19 +26,16 @@ const { page, frontmatter } = useData()
           >
         </a>
         <div class="text-sm text-gray-500 dark:text-white leading-5">
-          <a
-            class="hover:text-gray-700 dark:hover:text-gray-200"
-            href="https://edumail.nipao.com"
-            target="_blank"
-            rel="noopener"
-            >教育邮箱</a
-          >
-          <span class="mr-2 ml-2">·</span>
-          <a
-            class="hover:text-gray-700 dark:hover:text-gray-200 vp-raw"
-            href="/feed.rss"
-            >RSS<span class="hidden sm:inline"> Feed</span></a
-          >
+          <template v-for="(item, index) in theme.nav" :key="index">
+            <a
+              class="hover:text-gray-700 dark:hover:text-gray-200"
+              :href="item.link"
+              :target="item.target || undefined"
+              :rel="item.rel || undefined"
+              v-text="item.text"
+            />
+            <span class="mr-2 ml-2" v-if="index < theme.nav.length - 1">·</span>
+          </template>
         </div>
       </nav>
     </div>
