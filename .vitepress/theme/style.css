@@ -166,6 +166,15 @@ span.lang {
   color: #42b883;
 }
 
+.prose {
+  line-height: 1.5;
+}
+
+.prose :where(p):not(:where([class~="not-prose"],[class~="not-prose"] *)) {
+  margin-top: 1em;
+  margin-bottom: 1em;
+}
+
 .prose
   :where(:not(pre) > code):not(
     :where([class~='not-prose'], [class~='not-prose'] *)
