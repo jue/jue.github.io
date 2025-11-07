@@ -4,6 +4,10 @@
 
 ## 📝 文章列表
 
+### 2025年十一月
+
+- [苹果也翻车？App Store源码大泄漏，一场让程序员狂欢的“乌龙事件”](https://blog.nipao.com/post/apple-also-overturned)
+
 ### 2025年十月
 
 - [Mac 下 Kilo Code 集成 Gemini CLI 报错 403 终极修复指南](https://blog.nipao.com/post/kilo-code-integrated-gemini-cli-error-403-ultimate-repair-guide-on-mac)
@@ -17,7 +21,7 @@
 
 ### 2025年八月
 
-- [进阶篇-巧用CDN：为家庭服务套上“马甲”，实现完美HTTPS访问](https://blog.nipao.com/post/advanced-chapter-use-cdn-skillfully-put-a-vest-on-home-services-to-achieve-perfect-https-access)
+- [进阶篇-巧用CDN：为家庭服务套上“马甲”，实现完美HTTPS访问](https://blog.nipao.com/post/advanced-chapter-use-cdn-skillfully-put-a-vest-on-family-services-to-achieve-perfect-https-access)
 - [实战教程-突破端口封锁：如何使用1Panel在家庭网络中发布多个HTTPS服务](https://blog.nipao.com/post/practical-tutorial-breaking-through-port-blocking-how-to-use-1panel-to-publish-multiple-https-services-on-your-home-network)
 - [Proxmox VE下实现虚拟机（Guest OS）宕机后自动重启的问题](https://blog.nipao.com/post/the-problem-of-automatically-restarting-the-virtual-machine-guest-os-after-it-crashes-under-proxmox-ve)
 
@@ -33,6 +37,6 @@
 
 💡 **使用说明**：创建新的 Issue 即可自动生成博客文章，文章内容为 Issue 的正文部分。
 
-📊 **统计信息**：共有 10 篇文章
+📊 **统计信息**：共有 11 篇文章
 
-🔄 **最后更新**：2025/11/1 18:10:22
+🔄 **最后更新**：2025/11/7 17:18:39
